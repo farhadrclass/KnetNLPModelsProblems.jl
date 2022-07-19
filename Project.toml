@@ -3,6 +3,13 @@ uuid = "bc935da4-1950-4bc0-b8ba-f68a9e81f524"
 authors = ["farhadrclass <31899325+farhadrclass@users.noreply.github.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
+Knet = "1902f260-5fb4-5aff-8c31-6271790ab950"
+KnetNLPModels = "9601d21a-7b1e-4fc7-9dab-5c3f545997d5"
+MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
+
 [compat]
 julia = "1.6"
 
