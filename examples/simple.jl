@@ -15,15 +15,14 @@ dtst = minibatch(xtst, ytst, 100; xtype = Float32sr, ytype = Float32sr, xsize = 
 # size of minibatch 
 m = 100
 
-knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
+knetModel, myModel = lenetytrn_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
-
-# statsCNN = R2(myModel)
+statsCNN = R2(myModel, x0 = T.(rand(431080)))
 # print(statsCNN)
 # w = statsCNN.solution
 # myModel.w = w
 
-trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 20, maxTime = 100, all_data = false)
+trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 3, maxTime = 100, all_data = false)
 
 
 
