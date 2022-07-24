@@ -20,12 +20,12 @@ using Plots
 # using StochasticRounding
 
 include("struct_utils.jl")
-function loaddata(data_flag)
+function loaddata(data_flag, T)
     if (data_flag == 1)
         @info("Loading MNITS...")
-        xtrn, ytrn = MNIST.traindata(Float32)
+        xtrn, ytrn = MNIST.traindata(T)
         ytrn[ytrn.==0] .= 10
-        xtst, ytst = MNIST.testdata(Float32)
+        xtst, ytst = MNIST.testdata(T)
         ytst[ytst.==0] .= 10
         @info("Loaded MNIST")
     else # CIFAR data

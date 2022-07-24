@@ -4,25 +4,27 @@ include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
 include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
 
+using StochasticRounding
+T = Float32sr
 
-(xtrn, ytrn), (xtst, ytst) = loaddata(1)
+(xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
-
-dtrn = minibatch(xtrn, ytrn, 100; xsize = (size(xtrn, 1), size(xtrn, 2), 1, :))
-dtst = minibatch(xtst, ytst, 100; xsize = (size(xtst, 1), size(xtst, 2), 1, :))
+dtrn = minibatch(xtrn, ytrn, 100; xtype = Float32sr, ytype = Float32sr, xsize = (size(xtrn, 1), size(xtrn, 2), 1, :))
+dtst = minibatch(xtst, ytst, 100; xtype = Float32sr, ytype = Float32sr, xsize = (size(xtst, 1), size(xtst, 2), 1, :))
 
 # size of minibatch 
 m = 100
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
+
 # statsCNN = R2(myModel)
 # print(statsCNN)
 # w = statsCNN.solution
 # myModel.w = w
 
+trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 20, maxTime = 100, all_data = false)
 
-trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 12, maxTime = 100, all_data = false)
 
 
 #training loop to go over all the dataset
