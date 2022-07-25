@@ -3,7 +3,6 @@ using CUDA, IterTools, Knet, MLDatasets, NLPModels
 using KnetNLPModels
 using Statistics: mean
 using Knet
-
 struct Conv
     w::Any
     b::Any
