@@ -25,7 +25,7 @@ using Knet, Images, MLDatasets
 include("struct_utils.jl")
 function loaddata(data_flag, T)
     if (data_flag == 1)
-        @info("Loading MNITS...")
+        @info("Loading MNIST...")
         xtrn, ytrn = MNIST.traindata(T)
         ytrn[ytrn.==0] .= 10
         xtst, ytst = MNIST.testdata(T)
@@ -57,12 +57,12 @@ uses the whole test data sets"""
 All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
 
 #runs over only one random one
-function epoch!(modelNLP, solver, iter; verbos = true, mbatch = 64)
+function epoch!(modelNLP, solver, iter; verbose = true, mbatch = 64)
     reset_minibatch_train!(modelNLP)
     stats = solver(modelNLP)#;verbos=verbos)
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
-    if verbos
+    if verbose
         @info("Epoch # ", iter)
         @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
     end
@@ -70,20 +70,21 @@ function epoch!(modelNLP, solver, iter; verbos = true, mbatch = 64)
 end
 
 #run over all minibatched 
-function epoch_all!(modelNLP, solver, xtrn, ytrn; verbos = true, mbatch = 64)
+function epoch_all!(modelNLP, solver, xtrn, ytrn; verbose = true, mbatch = 64)
     #training loop to go over all the dataset
+    @info("Epoch # ", epoch)
     for i = 0:(length(ytrn)/m)-1
-        reset_minibatch_train!(LeNetNLPModel)
-        stats = solver(modelNLP)#;verbos= verbos)
+        reset_minibatch_train!(modelNLP)
+        @info("Minibatch = ", i)
+        stats = solver(modelNLP; verbose = verbose)
         new_w = stats.solution
         set_vars!(modelNLP, new_w)
-        if verbos
+        if verbose
             @info("Minibatch = ", i)
             @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
         end
     end
     return KnetNLPModels.accuracy(modelNLP)
-
 end
 
 function train_knetNLPmodel!(
@@ -95,7 +96,7 @@ function train_knetNLPmodel!(
     mepoch = 10,
     maxTime = 100,
     all_data = false,
-    verbos = true,
+    verbose = true
 )
 
     acc_arr = []
@@ -103,9 +104,9 @@ function train_knetNLPmodel!(
     best_acc = 0
     for j = 1:mepoch
         if all_data
-            acc = epoch_all!(modelNLP, solver, xtrn, ytrn; verbos = verbos, mbatch = 64)
+            acc = epoch_all!(modelNLP, solver, j, verbose; mbatch)
         else
-            acc = epoch!(modelNLP, solver, j; verbos = verbos, mbatch = 64)
+            acc = epoch!(modelNLP, solver, j, verbose; mbatch)
         end
 
         if acc > best_acc
@@ -141,8 +142,6 @@ function plotSamples(myModel, xtrn, ytrn; samples = 5)
     A = cat(x..., dims = 4)
     buff = myModel.chain(A)
     pred_y = findmax.(eachcol(buff.value))
-    # println("True classes: ",ytrn[rp[1:samples]])
-    # println("model perdicted classes: ",)
     imgs = [MNIST.convert2image(xtrn[:, :, rp[i]]) for i = 1:samples]
 
     p = plot(layout = (1, samples)) # Step 1
