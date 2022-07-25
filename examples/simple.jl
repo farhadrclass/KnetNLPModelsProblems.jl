@@ -2,27 +2,50 @@ include("..//src//utils.jl")
 
 include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
-include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
-
+using JSOSolvers
 using StochasticRounding
-T = Float32sr
+T = Float32
 
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
-dtrn = minibatch(xtrn, ytrn, 100; xtype = Float32sr, ytype = Float32sr, xsize = (size(xtrn, 1), size(xtrn, 2), 1, :))
-dtst = minibatch(xtst, ytst, 100; xtype = Float32sr, ytype = Float32sr, xsize = (size(xtst, 1), size(xtst, 2), 1, :))
+dtrn = minibatch(
+    xtrn,
+    ytrn,
+    100;
+    xtype = Float32sr,
+    ytype = Float32sr,
+    xsize = (size(xtrn, 1), size(xtrn, 2), 1, :),
+)
+dtst = minibatch(
+    xtst,
+    ytst,
+    100;
+    xtype = Float32sr,
+    ytype = Float32sr,
+    xsize = (size(xtst, 1), size(xtst, 2), 1, :),
+)
 
 # size of minibatch 
 m = 100
 
-knetModel, myModel = lenetytrn_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
+knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
-statsCNN = R2(myModel, x0 = T.(rand(431080)))
+# statsCNN = R2(myModel)
 # print(statsCNN)
 # w = statsCNN.solution
 # myModel.w = w
 
-trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 3, maxTime = 100, all_data = false)
+# trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 3, maxTime = 100, all_data = false)
+trained_model = train_knetNLPmodel!(
+    myModel,
+    lbfgs,
+    xtrn,
+    ytrn;
+    mbatch = m,
+    mepoch = 3,
+    maxTime = 100,
+    all_data = false,
+)
 
 
 
@@ -41,4 +64,12 @@ res = trained_model[2]
 epochs = res[:, 1]
 acc = res[:, 2]
 
-fig = plot(epochs, title="Best accuracy vs Epoch", acc, label="best accuracy", legend=:bottomright, xlabel = "epoch", ylabel = "accuracy")
+fig = plot(
+    epochs,
+    title = "Best accuracy vs Epoch",
+    acc,
+    label = "best accuracy",
+    legend = :bottomright,
+    xlabel = "epoch",
+    ylabel = "accuracy",
+)

@@ -4,6 +4,7 @@ authors = ["farhadrclass <31899325+farhadrclass@users.noreply.github.com> and co
 version = "0.1.0"
 
 [deps]
+ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
 Knet = "1902f260-5fb4-5aff-8c31-6271790ab950"
