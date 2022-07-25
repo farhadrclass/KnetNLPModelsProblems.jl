@@ -57,12 +57,12 @@ uses the whole test data sets"""
 All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
 
 #runs over only one random one
-function epoch!(modelNLP, solver, iter; verbose = true, mbatch = 64)
+function epoch!(modelNLP, solver, xtrn, ytrn, iter; verbose = true, epoch_verbose = true, mbatch = 64)
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP)#;verbos=verbos)
+    stats = solver(modelNLP; verbose=verbose)
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
-    if verbose
+    if epoch_verbose
         @info("Epoch # ", iter)
         @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
     end
@@ -70,16 +70,15 @@ function epoch!(modelNLP, solver, iter; verbose = true, mbatch = 64)
 end
 
 #run over all minibatched 
-function epoch_all!(modelNLP, solver, xtrn, ytrn; verbose = true, mbatch = 64)
+function epoch_all!(modelNLP, solver, xtrn, ytrn, epoch; verbose = true, epoch_verbose = true, mbatch = 64)
     #training loop to go over all the dataset
     @info("Epoch # ", epoch)
     for i = 0:(length(ytrn)/m)-1
         reset_minibatch_train!(modelNLP)
-        @info("Minibatch = ", i)
         stats = solver(modelNLP; verbose = verbose)
         new_w = stats.solution
         set_vars!(modelNLP, new_w)
-        if verbose
+        if epoch_verbose
             @info("Minibatch = ", i)
             @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
         end
@@ -96,7 +95,8 @@ function train_knetNLPmodel!(
     mepoch = 10,
     maxTime = 100,
     all_data = false,
-    verbose = true
+    verbose = true,
+    epoch_verbose = true
 )
 
     acc_arr = []
@@ -104,9 +104,9 @@ function train_knetNLPmodel!(
     best_acc = 0
     for j = 1:mepoch
         if all_data
-            acc = epoch_all!(modelNLP, solver, j, verbose; mbatch)
+            acc = epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         else
-            acc = epoch!(modelNLP, solver, j, verbose; mbatch)
+            acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         end
 
         if acc > best_acc
