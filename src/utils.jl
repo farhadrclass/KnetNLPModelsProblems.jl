@@ -139,9 +139,9 @@ end
 function plotSamples(myModel, xtrn, ytrn; samples = 5)
     rp = randperm(10000)
     x = [xtrn[:, :, rp[i]] for i = 1:samples]
-    A = cat(x..., dims = 4)
-    buff = myModel.chain(A)
-    pred_y = findmax.(eachcol(buff.value))
+    A = cat(x..., dims = 4);
+    buff = myModel.chain(A);
+    pred_y = findmax.(eachcol(buff));
     imgs = [MNIST.convert2image(xtrn[:, :, rp[i]]) for i = 1:samples]
 
     p = plot(layout = (1, samples)) # Step 1
