@@ -1,26 +1,13 @@
 # using Revise        # importantly, this must come before
-# using Test
 using JSOSolvers
 using LinearAlgebra
 using Random
 using Printf
-# using DataFrames
-# using OptimizationProblems
 using NLPModels
-# using ADNLPModels
-# using OptimizationProblems.ADNLPProblems
-# using SolverCore
 using SolverCore
 using Plots
-
 using Knet, Images, MLDatasets
-
-
-
-
-# using Plots
-# using Profile
-# using StochasticRounding
+using StochasticRounding
 
 include("struct_utils.jl")
 function loaddata(data_flag, T)
@@ -34,8 +21,8 @@ function loaddata(data_flag, T)
         # else if # MNIST FASHION
     else # CIFAR data
         @info("Loading CIFAR 10...")
-        xtrn, ytrn = CIFAR10.traindata()
-        xtst, ytst = CIFAR10.testdata()
+        xtrn, ytrn = CIFAR10.traindata(T)
+        xtst, ytst = CIFAR10.testdata(T)
         xtrn = convert(Knet.array_type[], xtrn)
         xtst = convert(Knet.array_type[], xtst)
         #= Subtract mean of each feature
@@ -134,15 +121,16 @@ function train_knetNLPmodel!(
     return best_acc, c
 end
 
+
 """This function will plots some samples annd perdicted vs true tags
 """
-function plotSamples(myModel, xtrn, ytrn; samples = 5)
+function plotSamples(myModel, xtrn, ytrn, data_set; samples = 5)
     rp = randperm(10000)
-    x = [xtrn[:, :, rp[i]] for i = 1:samples]
-    A = cat(x..., dims = 4)
-    buff = myModel.chain(A)
-    pred_y = findmax.(eachcol(buff.value))
-    imgs = [MNIST.convert2image(xtrn[:, :, rp[i]]) for i = 1:samples]
+    x = [xtrn[:, :, :,rp[i]] for i = 1:samples]
+    A = cat(x..., dims = 4);
+    buff = myModel.chain(A);
+    pred_y = findmax.(eachcol(buff));
+    imgs = [data_set.convert2image(xtrn[:, :, :,rp[i]]) for i = 1:samples]
 
     p = plot(layout = (1, samples)) # Step 1
     i = 1

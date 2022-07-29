@@ -14,15 +14,15 @@ function lenet_prob(xtrn, ytrn, xtst, ytst; minibatchSize = 100)
     LeNet = Chainnll(
         Conv(5, 5, 1, 20), # Conv(filter_length, filter_width, number of input channels from previous layer :n filters, 3 for RGB, 1 for Grey..., number of filters)
         Conv(5, 5, 20, 50),
-        Dense(800, 500),
-        Dense(500, 10, identity),
+        Dense(800, 500, pdrop = 0.0),
+        Dense(500, 10, identity, pdrop = 0.0),
     )
 
     LeNetNLPModel = KnetNLPModel(
         LeNet;
         data_train = (xtrn, ytrn),
         data_test = (xtst, ytst),
-        size_minibatch = minibatchSize,
+        size_minibatch = minibatchSize
     )
 
 
