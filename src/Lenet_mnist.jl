@@ -22,7 +22,7 @@ function lenet_prob(xtrn, ytrn, xtst, ytst; minibatchSize = 100)
         LeNet;
         data_train = (xtrn, ytrn),
         data_test = (xtst, ytst),
-        size_minibatch = minibatchSize
+        size_minibatch = minibatchSize,
     )
 
 

@@ -44,9 +44,18 @@ uses the whole test data sets"""
 All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
 
 #runs over only one random one
-function epoch!(modelNLP, solver, xtrn, ytrn, iter; verbose = true, epoch_verbose = true, mbatch = 64)
+function epoch!(
+    modelNLP,
+    solver,
+    xtrn,
+    ytrn,
+    iter;
+    verbose = true,
+    epoch_verbose = true,
+    mbatch = 64,
+)
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; verbose=verbose)
+    stats = solver(modelNLP; verbose = verbose)
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     if epoch_verbose
@@ -57,7 +66,16 @@ function epoch!(modelNLP, solver, xtrn, ytrn, iter; verbose = true, epoch_verbos
 end
 
 #run over all minibatched 
-function epoch_all!(modelNLP, solver, xtrn, ytrn, epoch; verbose = true, epoch_verbose = true, mbatch = 64)
+function epoch_all!(
+    modelNLP,
+    solver,
+    xtrn,
+    ytrn,
+    epoch;
+    verbose = true,
+    epoch_verbose = true,
+    mbatch = 64,
+)
     #training loop to go over all the dataset
     @info("Epoch # ", epoch)
     for i = 0:(length(ytrn)/m)-1
@@ -83,7 +101,7 @@ function train_knetNLPmodel!(
     maxTime = 100,
     all_data = false,
     verbose = true,
-    epoch_verbose = true
+    epoch_verbose = true,
 )
 
     acc_arr = []
@@ -91,7 +109,8 @@ function train_knetNLPmodel!(
     best_acc = 0
     for j = 1:mepoch
         if all_data
-            acc = epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            acc =
+                epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         else
             acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         end
@@ -101,7 +120,7 @@ function train_knetNLPmodel!(
             best_acc = acc
         end
 
-        append!(acc_arr, best_acc)
+        append!(acc_arr, acc) #TODO fix this to save the acc
         append!(iter_arr, j)
 
         if j % 10 == 0
@@ -109,10 +128,10 @@ function train_knetNLPmodel!(
         end
         # add!(acc_arr, (j, acc))
         #TODO wirte to file 
-        if acc > best_acc
-            #TODO write to file, KnetNLPModel, w
-            best_acc = acc
-        end
+        # if acc > best_acc
+        #     #TODO write to file, KnetNLPModel, w
+        #     best_acc = acc
+        # end
     end
 
     c = hcat(iter_arr, acc_arr)
@@ -126,16 +145,21 @@ end
 """
 function plotSamples(myModel, xtrn, ytrn, data_set; samples = 5)
     rp = randperm(10000)
-    x = [xtrn[:, :, :,rp[i]] for i = 1:samples]
-    A = cat(x..., dims = 4);
-    buff = myModel.chain(A);
-    pred_y = findmax.(eachcol(buff));
-    imgs = [data_set.convert2image(xtrn[:, :, :,rp[i]]) for i = 1:samples]
+    x = [xtrn[:, :, :, rp[i]] for i = 1:samples]
+    A = cat(x..., dims = 4)
+    buff = myModel.chain(A)
+    pred_y = findmax.(eachcol(buff))
+    imgs = [data_set.convert2image(xtrn[:, :, :, rp[i]]) for i = 1:samples]
 
     p = plot(layout = (1, samples)) # Step 1
     i = 1
     for item in imgs
-        plot!(p[i], item, ticks = false,title = string("T:", ytrn[rp[i]], "\nP:", pred_y[i][2]))
+        plot!(
+            p[i],
+            item,
+            ticks = false,
+            title = string("T:", ytrn[rp[i]], "\nP:", pred_y[i][2]),
+        )
         i = i + 1
     end
     display(p)
@@ -145,42 +169,47 @@ end
 ###############
 #Knet
 
-# # For running experiments
-# function train_knet!(model,dtrn,dtest; epoch= 10 )
-#    loss(x,y)=model(x,y)
-#    lossgradient = grad(loss)
-#    acc_arr = []
-#    iter_arr = []
-#    best_acc = 0
-#    for j = 1:mepoch
-#         acc = epoch_knet!(model, xtrn, ytrn, lossgradient; mbatch)
-#        if acc > best_acc
-#            #TODO write to file, KnetNLPModel, w
-#            best_acc = acc
-#        end
-
-#        append!(acc_arr, best_acc)
-#        append!(iter_arr, j)
-
-#        if j % 10 == 0
-#            @info("epoch #", j, "  acc= ", acc)
-#        end
-#        if acc > best_acc
-#            best_acc = acc
-#        end
-#    end
-
-#    c = hcat(iter_arr, acc_arr)
-#    return best_acc, c
+# function Knet_helper(knetModel)
+#     loss(x, y) = knetModel(x, y)
+#     return loss
 # end
 
-# # Training
-# function epoch_knet!(model, xtrn, ytrn,lossgrad;  mbatch=100)
-#     data = minibatch(xtrn, ytrn, mbatch;
-#                    shuffle=true,
-#                    xtype=Knet.array_type[])
-#     for (x, y) in data
-#         g = lossgrad(w, x, y)
-#         update!(w, g, o)
-#     end
-# end
+create_minibatch_iter(x_data, y_data, minibatch_size) = Knet.minibatch(
+    x_data,
+    y_data,
+    minibatch_size;
+    xsize = (size(x_data, 1), size(x_data, 2), 1, :),
+)
+
+function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr = 0.1, epochs = 3, iters = 1800)
+    dtrn = minibatch(xtrn, ytrn, mbatch; xsize = (28, 28, 1, :)) #TODO the dimention fix this, Nathan fixed that for CIFAR-10
+    test_minibatch_iterator = create_minibatch_iter(xtst, ytst, mbatch) # this is only use so our accracy can be compared with KnetNLPModel, since thier accracy use this
+    acc_arr = []
+    iter_arr = []
+    best_acc = 0
+    for epoch = 1:epochs
+        progress!(opt(knetModel, dtrn, lr = lr)) #selected optimizer, train one epoch
+        acc = Knet.accuracy(knetModel; data = test_minibatch_iterator);
+
+        if acc > best_acc
+            #TODO write to file, KnetNLPModel, w
+            best_acc = acc
+        end
+
+        append!(acc_arr, acc) #TODO fix this to save the acc
+        append!(iter_arr, j)
+
+        if j % 10 == 0
+            @info("epoch #", j, "  acc= ", acc)
+        end
+        # add!(acc_arr, (j, acc))
+        #TODO wirte to file 
+        # if acc > best_acc
+        #     #TODO write to file, KnetNLPModel, w
+        #     best_acc = acc
+        # end
+    end
+    c = hcat(iter_arr, acc_arr)
+    #after each epoch if the accuracy better, stop 
+    return best_acc, c
+end
