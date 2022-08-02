@@ -91,3 +91,47 @@ plot!(fig,
     train_acc_knet,
     label = "train accuracy SGD",
 )
+
+
+
+
+#Plot all
+
+fig = plot(
+    epochs,
+    title = " All accuracy vs Epoch on Float32",
+    markershape = :star1,
+    acc,
+    label = "test accuracy R2",
+    legend = :bottomright,
+    xlabel = "epoch",
+    ylabel = "accuracy",
+    
+
+)
+plot!(fig,
+    epochs,
+    markershape = :star4,
+    acc_knet,
+    label = "test accuracy SGD",
+)
+
+# plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
+
+plot!(fig,
+    epochs,
+    markershape = :star1,
+    train_acc,
+    label = "train accuracy R2",
+    legend = :bottomright,
+    linestyle=:dash,
+
+)
+plot!(fig,
+    epochs,
+    markershape = :star4,
+    train_acc_knet,
+    label = "train accuracy SGD",
+    linestyle=:dot,
+
+)
