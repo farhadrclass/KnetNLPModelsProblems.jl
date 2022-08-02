@@ -187,7 +187,7 @@ function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr 
     acc_arr = []
     iter_arr = []
     best_acc = 0
-    for epoch = 1:epochs
+    for j = 1:epochs
         progress!(opt(knetModel, dtrn, lr = lr)) #selected optimizer, train one epoch
         acc = Knet.accuracy(knetModel; data = test_minibatch_iterator);
 

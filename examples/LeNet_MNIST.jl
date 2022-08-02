@@ -25,6 +25,7 @@ Knet.atype() = Array{T}
 
 # size of minibatch 
 m = 100
+epochs = 5
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
@@ -34,7 +35,7 @@ trained_model = train_knetNLPmodel!(
     xtrn,
     ytrn;
     mbatch = m,
-    mepoch = 3,
+    mepoch = epochs,
     maxTime = 100,
     all_data = false,
     verbose = true,
@@ -49,14 +50,14 @@ fig = plot(
     title = "Best accuracy vs Epoch on Float32",
     markershape = :star4,
     acc,
-    label = "best accuracy",
+    label = "accuracy per epoch",
     legend = :bottomright,
     xlabel = "epoch",
     ylabel = "accuracy",
 )
 
 # # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst)
+trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;epochs=epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]
