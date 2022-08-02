@@ -55,7 +55,7 @@ function epoch!(
     mbatch = 64,
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; atol = 0.1, rtol =0.1,verbose = verbose)
+    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose)
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     if epoch_verbose
@@ -133,8 +133,8 @@ function train_knetNLPmodel!(
         append!(acc_arr, acc) #TODO fix this to save the acc
         append!(iter_arr, j)
 
-        if j % 10 == 0
-            @info("epoch #", j, "  acc= ", acc)
+        if j % 2 == 0
+            @info("epoch #", j, "  acc= ", train_acc)
         end
         # add!(acc_arr, (j, acc))
         #TODO wirte to file 
@@ -226,8 +226,8 @@ function train_knet(
         append!(acc_arr, acc) #TODO fix this to save the acc
         append!(iter_arr, j)
 
-        if j % 10 == 0
-            @info("epoch #", j, "  acc= ", acc)
+        if j % 2 == 0
+            @info("epoch #", j, "  acc= ", train_acc)
         end
         # add!(acc_arr, (j, acc))
         #TODO wirte to file 

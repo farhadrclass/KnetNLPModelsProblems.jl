@@ -24,7 +24,7 @@ Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
-m = 258
+m = 512
 max_epochs = 5
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
@@ -58,7 +58,7 @@ train_acc_knet = res_knet[:, 3]
 
 fig = plot(
     epochs,
-    title = " test accuracy vs Epoch on Float32",
+    # title = " test accuracy vs Epoch",
     markershape = :star4,
     acc,
     label = "test accuracy R2",
@@ -90,7 +90,7 @@ plot!(fig, epochs, markershape = :star1, train_acc_knet, label = "train accuracy
 
 fig = plot(
     epochs,
-    title = " All accuracy vs Epoch on Float32",
+    # title = " All accuracy vs Epoch on Float32",
     markershape = :star1,
     acc,
     label = "test accuracy R2",
