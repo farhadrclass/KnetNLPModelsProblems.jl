@@ -105,20 +105,25 @@ function train_knetNLPmodel!(
 )
 
     acc_arr = []
+    train_acc_arr = []
     iter_arr = []
     best_acc = 0
     for j = 1:mepoch
         if all_data
-            acc =
-                epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            acc =  epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         else
             acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         end
-
+        
         if acc > best_acc
             #TODO write to file, KnetNLPModel, w
             best_acc = acc
         end
+        # train accracy
+        data_buff = create_minibatch(modelNLP.current_training_minibatch[1],modelNLP.current_training_minibatch[2],mbatch) # we need to create iterator it has one item
+        train_acc = Knet.accuracy(modelNLP.chain;data = data_buff)
+        append!(train_acc_arr, train_acc) #TODO fix this to save the acc
+
 
         append!(acc_arr, acc) #TODO fix this to save the acc
         append!(iter_arr, j)
@@ -134,7 +139,7 @@ function train_knetNLPmodel!(
         # end
     end
 
-    c = hcat(iter_arr, acc_arr)
+    c = hcat(iter_arr, acc_arr,train_acc_arr)
     #after each epoch if the accuracy better, stop 
     # all_data =true, go over them all, false only select minibatch
     return best_acc, c
@@ -186,10 +191,16 @@ function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr 
     test_minibatch_iterator = create_minibatch_iter(xtst, ytst, mbatch) # this is only use so our accracy can be compared with KnetNLPModel, since thier accracy use this
     acc_arr = []
     iter_arr = []
+    train_acc_arr = []
     best_acc = 0
     for j = 1:epochs
         progress!(opt(knetModel, dtrn, lr = lr)) #selected optimizer, train one epoch
         acc = Knet.accuracy(knetModel; data = test_minibatch_iterator);
+
+       
+        train_acc =  Knet.accuracy(knetModel,dtrn)
+        append!(train_acc_arr, train_acc)
+
 
         if acc > best_acc
             #TODO write to file, KnetNLPModel, w
@@ -209,7 +220,7 @@ function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr 
         #     best_acc = acc
         # end
     end
-    c = hcat(iter_arr, acc_arr)
+    c = hcat(iter_arr, acc_arr,train_acc_arr)
     #after each epoch if the accuracy better, stop 
     return best_acc, c
 end

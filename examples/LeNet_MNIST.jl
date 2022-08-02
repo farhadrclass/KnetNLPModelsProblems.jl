@@ -44,29 +44,50 @@ trained_model = train_knetNLPmodel!(
 res = trained_model[2]
 epochs = res[:, 1]
 acc = res[:, 2]
+train_acc = res[:, 3]
 
-fig = plot(
-    epochs,
-    title = "Best accuracy vs Epoch on Float32",
-    markershape = :star4,
-    acc,
-    label = "accuracy per epoch",
-    legend = :bottomright,
-    xlabel = "epoch",
-    ylabel = "accuracy",
-)
+
 
 # # Train Knet
 trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;epochs=epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]
+train_acc_knet = res_knet[:, 3]
 
 
+fig = plot(
+    epochs,
+    title = " test accuracy vs Epoch on Float32",
+    markershape = :star4,
+    acc,
+    label = "test accuracy R2",
+    legend = :bottomright,
+    xlabel = "epoch",
+    ylabel = "accuracy",
+)
 plot!(fig,
     epochs,
     markershape = :star1,
     acc_knet,
+    label = "test accuracy SGD",
 )
 
 # plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
+
+fig = plot(
+    epochs,
+    title = "train accuracy vs Epoch on Float32",
+    markershape = :star4,
+    train_acc,
+    label = "train accuracy R2",
+    legend = :bottomright,
+    xlabel = "epoch",
+    ylabel = "accuracy",
+)
+plot!(fig,
+    epochs,
+    markershape = :star1,
+    train_acc_knet,
+    label = "train accuracy SGD",
+)
