@@ -25,7 +25,7 @@ Knet.atype() = Array{T}
 
 # size of minibatch 
 m = 100
-epochs = 5
+max_epochs = 5
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
@@ -35,7 +35,7 @@ trained_model = train_knetNLPmodel!(
     xtrn,
     ytrn;
     mbatch = m,
-    mepoch = epochs,
+    mepoch = max_epochs,
     maxTime = 100,
     all_data = false,
     verbose = true,
@@ -49,7 +49,7 @@ train_acc = res[:, 3]
 
 
 # # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;epochs=epochs)
+trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst; mepoch=5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]

@@ -186,19 +186,19 @@ create_minibatch_iter(x_data, y_data, minibatch_size) = Knet.minibatch(
     xsize = (size(x_data, 1), size(x_data, 2), 1, :),
 )
 
-function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr = 0.1, epochs = 3, iters = 1800)
+function train_knet(knetModel, xtrn, ytrn, xtst, ytst; opt= sgd, mbatch=100, lr = 0.1, mepoch = 5, iters = 1800)
     dtrn = minibatch(xtrn, ytrn, mbatch; xsize = (28, 28, 1, :)) #TODO the dimention fix this, Nathan fixed that for CIFAR-10
     test_minibatch_iterator = create_minibatch_iter(xtst, ytst, mbatch) # this is only use so our accracy can be compared with KnetNLPModel, since thier accracy use this
     acc_arr = []
     iter_arr = []
     train_acc_arr = []
     best_acc = 0
-    for j = 1:epochs
+    for j = 1:mepoch
         progress!(opt(knetModel, dtrn, lr = lr)) #selected optimizer, train one epoch
         acc = Knet.accuracy(knetModel; data = test_minibatch_iterator);
 
        
-        train_acc =  Knet.accuracy(knetModel,dtrn)
+        train_acc =  Knet.accuracy(knetModel;data=dtrn)
         append!(train_acc_arr, train_acc)
 
 
