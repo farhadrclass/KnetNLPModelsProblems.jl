@@ -49,7 +49,7 @@ train_acc = res[:, 3]
 
 
 # # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst; mepoch=5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
+trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst; mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]
@@ -66,12 +66,7 @@ fig = plot(
     xlabel = "epoch",
     ylabel = "accuracy",
 )
-plot!(fig,
-    epochs,
-    markershape = :star1,
-    acc_knet,
-    label = "test accuracy SGD",
-)
+plot!(fig, epochs, markershape = :star1, acc_knet, label = "test accuracy SGD")
 
 # plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
@@ -85,12 +80,7 @@ fig = plot(
     xlabel = "epoch",
     ylabel = "accuracy",
 )
-plot!(fig,
-    epochs,
-    markershape = :star1,
-    train_acc_knet,
-    label = "train accuracy SGD",
-)
+plot!(fig, epochs, markershape = :star1, train_acc_knet, label = "train accuracy SGD")
 
 
 
@@ -106,32 +96,25 @@ fig = plot(
     legend = :bottomright,
     xlabel = "epoch",
     ylabel = "accuracy",
-    
-
 )
-plot!(fig,
-    epochs,
-    markershape = :star4,
-    acc_knet,
-    label = "test accuracy SGD",
-)
+plot!(fig, epochs, markershape = :star4, acc_knet, label = "test accuracy SGD")
 
 # plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
-plot!(fig,
+plot!(
+    fig,
     epochs,
     markershape = :star1,
     train_acc,
     label = "train accuracy R2",
     legend = :bottomright,
-    linestyle=:dash,
-
+    linestyle = :dash,
 )
-plot!(fig,
+plot!(
+    fig,
     epochs,
     markershape = :star4,
     train_acc_knet,
     label = "train accuracy SGD",
-    linestyle=:dot,
-
+    linestyle = :dot,
 )
