@@ -24,7 +24,7 @@ Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
-m = 100
+m = 258
 max_epochs = 5
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
@@ -49,7 +49,7 @@ train_acc = res[:, 3]
 
 
 # # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst; mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
+trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;mbatch=m, mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]
@@ -83,6 +83,7 @@ fig = plot(
 plot!(fig, epochs, markershape = :star1, train_acc_knet, label = "train accuracy SGD")
 
 
+# plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
 
 #Plot all
@@ -97,9 +98,7 @@ fig = plot(
     xlabel = "epoch",
     ylabel = "accuracy",
 )
-plot!(fig, epochs, markershape = :star4, acc_knet, label = "test accuracy SGD")
 
-# plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
 plot!(
     fig,
@@ -110,6 +109,8 @@ plot!(
     legend = :bottomright,
     linestyle = :dash,
 )
+plot!(fig, epochs, markershape = :star4, acc_knet, label = "test accuracy SGD")
+
 plot!(
     fig,
     epochs,

@@ -55,12 +55,12 @@ function epoch!(
     mbatch = 64,
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; verbose = verbose)
+    stats = solver(modelNLP; atol = 0.1, rtol =0.1,verbose = verbose)
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     if epoch_verbose
         @info("Epoch # ", iter)
-        @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
+        # @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP)) # this takes too long 
     end
     return KnetNLPModels.accuracy(modelNLP)
 end
@@ -80,12 +80,12 @@ function epoch_all!(
     @info("Epoch # ", epoch)
     for i = 0:(length(ytrn)/m)-1
         reset_minibatch_train!(modelNLP)
-        stats = solver(modelNLP; verbose = verbose)
+        stats = solver(modelNLP; atol = 0.05, rtol =0.09, verbose = verbose)
         new_w = stats.solution
         set_vars!(modelNLP, new_w)
         if epoch_verbose
             @info("Minibatch = ", i)
-            @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP))
+            # @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP)) # this takes too long
         end
     end
     return KnetNLPModels.accuracy(modelNLP)
