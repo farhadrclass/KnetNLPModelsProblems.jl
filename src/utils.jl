@@ -256,33 +256,3 @@ function train_knet(
     #after each epoch if the accuracy better, stop 
     return best_acc, c
 end
-
-function train_gpu(;T = Float32,
-    minibatch_size = 100, 
-    max_epochs = 5, 
-    solver = R2, 
-    all_data_arg = false, 
-    verbose_arg = true, 
-    epoch_verbose_arg = true
-    )
-
-    Knet.atype() = Array{T}
-    (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
-    knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = minibatch_size)
-
-    trained_model = train_knetNLPmodel!(
-        myModel,
-        solver,
-        xtrn,
-        ytrn;
-        mbatch = minibatch_size,
-        mepoch = max_epochs,
-        maxTime = 100,
-        all_data = all_data_arg,
-        verbose = verbose_arg,
-        epoch_verbose = epoch_verbose_arg
-        )
-    res = trained_model[2]
-    epochs, acc, train_acc = res[:, 1], res[:, 2], res[:, 3]
-    return epochs, acc, train_acc
-end
