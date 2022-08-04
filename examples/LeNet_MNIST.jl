@@ -1,5 +1,5 @@
 include("..//src//utils.jl")
-include("/Users/Farhad/Documents/GitHub/JSOSolvers.jl/src/R2.jl")
+include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
 include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
 
@@ -19,7 +19,7 @@ using Knet:
     minibatch,
     Data
 
-T = Float32
+T = Float16
 Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
@@ -27,14 +27,14 @@ Knet.atype() = Array{T}
 m = 512
 max_epochs = 5
 
-knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
+knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = 10)
 
 trained_model = train_knetNLPmodel!(
     myModel,
     R2,
     xtrn,
     ytrn;
-    mbatch = m,
+    mbatch = 10,
     mepoch = max_epochs,
     maxTime = 100,
     all_data = false,
