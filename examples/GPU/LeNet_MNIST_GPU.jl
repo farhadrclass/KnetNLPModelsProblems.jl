@@ -1,5 +1,5 @@
 include("..//src//utils.jl")
-include("R2.jl")
+include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/GPU/R2.jl")
 include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
 
@@ -13,10 +13,8 @@ function train_gpu(;T = Float32,
     verbose_arg = true, 
     epoch_verbose_arg = true
     )
-    if CUDA.functional() 
-        Knet.array_type[] = CUDA.CuArray{T}
-    else 
-        Knet.array_type[] = Array{T}
+
+    # @eval Knet.atype() = Array{T}
     if epoch_verbose_arg
         @info("The type is ", T)
     end
