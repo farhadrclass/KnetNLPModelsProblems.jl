@@ -1,7 +1,7 @@
-include("..//src//utils.jl")
-include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/GPU/R2.jl")
-include("..//src//Lenet_mnist.jl")
-include("..//src//FC_mnist.jl")
+include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/src/utils.jl")
+include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/examples/GPU/R2.jl")
+include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/src/Lenet_mnist.jl")
+include("/Users/nathanallaire/Desktop/GERAD/KnetNLPModelsProblems/src/FC_mnist.jl")
 
 
 
@@ -14,7 +14,12 @@ function train_gpu(;T = Float32,
     epoch_verbose_arg = true
     )
 
-    # @eval Knet.atype() = Array{T}
+    if CUDA.functional() 
+        Knet.array_type[] = CUDA.CuArray{T}
+    else 
+        Knet.array_type[] = Array{T}
+    end
+    
     if epoch_verbose_arg
         @info("The type is ", T)
     end
@@ -38,5 +43,3 @@ function train_gpu(;T = Float32,
     epochs, acc, train_acc = res[:, 1], res[:, 2], res[:, 3]
     return epochs, acc, train_acc
 end
-
-train_gpu()

@@ -17,6 +17,8 @@ function train_gpu(;T = Float32,
         Knet.array_type[] = CUDA.CuArray{T}
     else 
         Knet.array_type[] = Array{T}
+    end
+    
     if epoch_verbose_arg
         @info("The type is ", T)
     end
@@ -40,5 +42,3 @@ function train_gpu(;T = Float32,
     epochs, acc, train_acc = res[:, 1], res[:, 2], res[:, 3]
     return epochs, acc, train_acc
 end
-
-train_gpu()
