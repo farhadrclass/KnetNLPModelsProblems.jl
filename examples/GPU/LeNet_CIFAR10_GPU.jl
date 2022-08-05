@@ -1,11 +1,8 @@
 include("../../src/utils.jl")
 include("R2.jl")
-include("../../src/Lenet_mnist.jl")
-include("../../src/FC_mnist.jl")
+include("../../src/NN_CIFAR10.jl")
 
-
-
-function train_gpu(;T = Float32,
+function train_gpu_c10(;T = Float32,
     minibatch_size = 100, 
     max_epochs = 5, 
     solver = R2, 
@@ -24,8 +21,8 @@ function train_gpu(;T = Float32,
         @info("The type is ", T)
     end
     
-    (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
-    knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = minibatch_size)
+    (xtrn, ytrn), (xtst, ytst) = loaddata(2, T)
+    knetModel, myModel = cifar10_prob(xtrn, ytrn, xtst, ytst, minibatchSize = minibatch_size)
 
     trained_model = train_knetNLPmodel!(
         myModel,
