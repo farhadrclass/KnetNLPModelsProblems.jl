@@ -2,12 +2,12 @@ include("..//src//utils.jl")
 include("..//src//NN_CIFAR10.jl")
 include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
 
-T = Float16
+T = Float32
 Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(2, T)
 
 # size of minibatch 
-m = 100
+m = 512
 
 knetModel, myModel = cifar10_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
@@ -20,7 +20,7 @@ trained_model = train_knetNLPmodel!(
     xtrn,
     ytrn;
     mbatch = m,
-    mepoch = 5,
+    mepoch = 50,
     maxTime = 100,
     all_data = false,
     verbose = true,

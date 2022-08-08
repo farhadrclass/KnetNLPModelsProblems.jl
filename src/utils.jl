@@ -138,8 +138,8 @@ function train_knetNLPmodel!(
         end
         # train accracy
         data_buff = create_minibatch(
-            modelNLP.current_minibatch_training[1],
-            modelNLP.current_minibatch_training[2],
+            modelNLP.current_training_minibatch[1],
+            modelNLP.current_training_minibatch[2],
             mbatch,
         ) # we need to create iterator it has one item
         train_acc = Knet.accuracy(modelNLP.chain; data = data_buff)
