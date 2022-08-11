@@ -59,6 +59,29 @@ Compute the accuracy of the network `nlp.chain` given the data in `nlp.tests`.
 uses the whole test data sets"""
 All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
 
+#runs over only one random one one step of R2Solver
+# by changine max_iter we can see if more steps have effect
+function stochastic_epoch!(
+    modelNLP,
+    solver,
+    xtrn,
+    ytrn,
+    iter;
+    verbose = true,
+    max_iter = 1, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
+    #TODO  add max itration 
+    epoch_verbose = true,
+    mbatch = 64, #todo see if we need this , in future we can update the number of batch size in different epochs
+)
+    reset_minibatch_train!(modelNLP)
+    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose,max_eval=max_iter) # todo chgange when max_iter is added 
+    new_w = stats.solution
+    set_vars!(modelNLP, new_w)
+    return KnetNLPModels.accuracy(modelNLP)
+end
+
+
+
 #runs over only one random one
 function epoch!(
     modelNLP,
@@ -124,12 +147,14 @@ function train_knetNLPmodel!(
     train_acc_arr = []
     iter_arr = []
     best_acc = 0
+
     for j = 1:mepoch
-        if all_data
+        if all_data # Todo change this to have 3 way condition 
             acc =
                 epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         else
-            acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            # acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            acc = stochastic_epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         end
 
         if acc > best_acc

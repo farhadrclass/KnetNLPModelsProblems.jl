@@ -72,7 +72,7 @@ function solve!(
     η2 = T(0.95),
     γ1 = T(1/2),
     γ2 = 1/γ1,
-    σmin = zero(T),
+    σmin = zero(T), #todo add max iteration
     max_time::Float64 = 3600.0,
     max_eval::Int = -1,
     verbose::Bool = true,
