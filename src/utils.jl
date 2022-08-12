@@ -68,18 +68,18 @@ function stochastic_epoch!(
     ytrn,
     iter;
     verbose = true,
-    max_iter = 1, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
+    max_iter = 0, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
     epoch_verbose = true,
     mbatch = 64, #todo see if we need this , in future we can update the number of batch size in different epochs
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose,max_eval=max_iter) # todo chgange when max_iter is added 
+    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose,max_iter=max_iter) # todo chgange when max_iter is added 
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     return KnetNLPModels.accuracy(modelNLP)
 end
-
+    
 
 
 #runs over only one random one
@@ -141,6 +141,7 @@ function train_knetNLPmodel!(
     all_data = false,
     verbose = true,
     epoch_verbose = true,
+    max_iter = -1
 )
 
     acc_arr = []
@@ -153,8 +154,8 @@ function train_knetNLPmodel!(
             acc =
                 epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
         else
-            # acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
-            acc = stochastic_epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            #acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+            acc = stochastic_epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, max_iter, epoch_verbose, mbatch)
         end
 
         if acc > best_acc

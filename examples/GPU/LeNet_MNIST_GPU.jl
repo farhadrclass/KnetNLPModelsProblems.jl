@@ -8,6 +8,7 @@ include("../../src/FC_mnist.jl")
 function train_gpu(;T = Float32,
     minibatch_size = 100, 
     max_epochs = 5, 
+    max_iter = -1,
     solver = R2, 
     all_data_arg = false, 
     verbose_arg = true, 
@@ -37,6 +38,7 @@ function train_gpu(;T = Float32,
         maxTime = 100,
         all_data = all_data_arg,
         verbose = verbose_arg,
+        max_iter = max_iter,
         epoch_verbose = epoch_verbose_arg
         )
     res = trained_model[2]

@@ -76,6 +76,7 @@ function solve!(
     max_time::Float64 = 3600.0,
     max_eval::Int = -1,
     verbose::Bool = true,
+    max_iter = -1,
   ) where {T, V}
 
   unconstrained(nlp) || error("R2 should only be called on unconstrained problems.")
@@ -86,7 +87,7 @@ function solve!(
   ∇fk = solver.gx
   ck = solver.cx
 
-  iter = 0
+  iter = 1
   fk = obj(nlp, x)
   
   grad!(nlp, x, ∇fk)
@@ -103,7 +104,7 @@ function solve!(
     @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
     @info @sprintf "%5d  %9.2e  %7.1e  %7.1e" iter fk norm_∇fk σk
   end
-  tired = neval_obj(nlp) > max_eval ≥ 0 || elapsed_time > max_time
+  tired = neval_obj(nlp) > max_eval ≥ 0 || elapsed_time > max_time || iter > max_iter ≥ 0
   if verbose
     @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
     infoline = @sprintf "%5d  %9.2e  %7.1e  %7.1e" iter fk norm_∇fk σk
@@ -141,7 +142,7 @@ function solve!(
     iter += 1
     elapsed_time = time() - start_time
     optimal = norm_∇fk ≤ ϵ
-    tired = neval_obj(nlp) > max_eval ≥ 0 || elapsed_time > max_time
+    tired = neval_obj(nlp) > max_eval ≥ 0 || elapsed_time > max_time || iter > max_iter ≥ 0
   
     if verbose
       @info infoline
@@ -157,6 +158,8 @@ function solve!(
         status = :max_time
       elseif neval_obj(nlp) > max_eval
         status = :max_eval
+      elseif iter > max_iter
+        status = :max_iter
       end
     end
 
