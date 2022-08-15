@@ -1,7 +1,6 @@
 include("../../src/utils.jl")
 include("R2.jl")
 include("../../src/Lenet_mnist.jl")
-include("../../src/FC_mnist.jl")
 
 
 

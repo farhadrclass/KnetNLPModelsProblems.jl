@@ -74,7 +74,7 @@ function stochastic_epoch!(
     mbatch = 64, #todo see if we need this , in future we can update the number of batch size in different epochs
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose,max_iter=max_iter) # todo chgange when max_iter is added 
+    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose, max_iter = max_iter) # todo chgange when max_iter is added 
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     return KnetNLPModels.accuracy(modelNLP)
