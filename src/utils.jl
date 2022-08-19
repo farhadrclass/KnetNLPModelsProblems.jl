@@ -68,20 +68,47 @@ function stochastic_epoch!(
     ytrn,
     iter;
     verbose = true,
-    max_iter = 0, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
+    max_iter = 1, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
     epoch_verbose = true,
     mbatch = 64, #todo see if we need this , in future we can update the number of batch size in different epochs
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; atol = 0.09, rtol =0.09,verbose = verbose, max_iter = max_iter) # todo chgange when max_iter is added 
+    stats = solver(modelNLP; atol = 0.05, rtol =0.05,verbose = verbose, max_iter = max_iter) # todo chgange when max_iter is added 
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     return KnetNLPModels.accuracy(modelNLP)
 end
-    
+
+#run over all minibatched 
+function stoch_epoch_all!(
+    modelNLP,
+    solver,
+    xtrn,
+    ytrn,
+    epoch;
+    max_iter= 1,
+    verbose = true,
+    epoch_verbose = true,
+    mbatch = 64,
+)
+    #training loop to go over all the dataset
+    @info("Epoch # ", epoch)
+    for i = 0:(length(ytrn)/m)-1
+        reset_minibatch_train!(modelNLP)  #TODO  for now this is random  , make it loop through it 
+        stats = solver(modelNLP; atol = 0.05, rtol =0.09, verbose = verbose, max_iter=max_iter)
+        new_w = stats.solution
+        set_vars!(modelNLP, new_w)
+        if epoch_verbose
+            @info("Minibatch = ", i)
+            # @info("Minibatch accuracy: ", KnetNLPModels.accuracy(modelNLP)) # this takes too long
+        end
+    end
+    return KnetNLPModels.accuracy(modelNLP)
+end
 
 
+##################################
 #runs over only one random one
 function epoch!(
     modelNLP,
