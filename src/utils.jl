@@ -68,13 +68,14 @@ function stochastic_epoch!(
     ytrn,
     iter;
     verbose = true,
+    gamma= 0.9,
     max_iter = 1, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
     epoch_verbose = true,
     mbatch = 64, #todo see if we need this , in future we can update the number of batch size in different epochs
 )
     reset_minibatch_train!(modelNLP)
-    stats = solver(modelNLP; atol = 0.05, rtol =0.05,verbose = verbose, max_iter = max_iter) # todo chgange when max_iter is added 
+    stats = solver(modelNLP; atol = 0.05, rtol =0.05,verbose = verbose, max_iter = max_iter,user_gamma = gamma ) # todo chgange when max_iter is added 
     new_w = stats.solution
     set_vars!(modelNLP, new_w)
     return KnetNLPModels.accuracy(modelNLP)
@@ -91,12 +92,13 @@ function stoch_epoch_all!(
     verbose = true,
     epoch_verbose = true,
     mbatch = 64,
+    gamma = 0.9,
 )
     #training loop to go over all the dataset
     @info("Epoch # ", epoch)
     for i = 0:(length(ytrn)/m)-1
         reset_minibatch_train!(modelNLP)  #TODO  for now this is random  , make it loop through it 
-        stats = solver(modelNLP; atol = 0.05, rtol =0.09, verbose = verbose, max_iter=max_iter)
+        stats = solver(modelNLP; atol = 0.05, rtol =0.09, verbose = verbose, max_iter=max_iter,user_gamma=gamma)
         new_w = stats.solution
         set_vars!(modelNLP, new_w)
         if epoch_verbose
@@ -168,7 +170,8 @@ function train_knetNLPmodel!(
     all_data = false,
     verbose = true,
     epoch_verbose = true,
-    max_iter = -1
+    max_iter = 1,
+    gamma = 0.9
 )
 
     acc_arr = []
@@ -179,10 +182,10 @@ function train_knetNLPmodel!(
     for j = 1:mepoch
         if all_data # Todo change this to have 3 way condition 
             acc =
-                epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
+                epoch_all!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch,gamma = gamma)
         else
             #acc = epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, epoch_verbose, mbatch)
-            acc = stochastic_epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, max_iter, epoch_verbose, mbatch)
+            acc = stochastic_epoch!(modelNLP, solver, xtrn, ytrn, j; verbose, max_iter, epoch_verbose, mbatch,gamma = gamma)
         end
 
         if acc > best_acc

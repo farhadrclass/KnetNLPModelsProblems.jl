@@ -1,4 +1,4 @@
-include("/Users/nathanallaire/Desktop/GERAD/SR_DL/src/tools.jl")
+# include("/Users/nathanallaire/Desktop/GERAD/SR_DL/src/tools.jl")
 using CUDA, IterTools, Knet, MLDatasets, NLPModels
 using KnetNLPModels
 using Statistics: mean
@@ -19,6 +19,7 @@ struct Dense
 end
 #(d::Dense)(x) = d.f.(standard_inner_product_zero_mean_improve(d.w, mat(dropout(x, d.p)) .+ d.b, typeof(x)))
 (d::Dense)(x) = d.f.(d.w * mat(dropout(x, d.p)) .+ d.b) # todo change * in future 
+
 Dense(i::Int, o::Int, f = sigm; pdrop = 0.0) = Dense(param(o, i), param0(o), f, pdrop)
 
 struct Chainnll <: KnetNLPModels.Chain

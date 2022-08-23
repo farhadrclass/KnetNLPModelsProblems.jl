@@ -77,15 +77,20 @@ function solve!(
     max_eval::Int = -1,
     verbose::Bool = true,
     max_iter = -1,
+    user_gamma = 0.9 , #### Momentum
   ) where {T, V}
 
+  
   unconstrained(nlp) || error("R2 should only be called on unconstrained problems.")
   start_time = time()
   elapsed_time = 0.0
+  gamma = T(user_gamma) #type change for defence 
 
+  
   x = solver.x .= x0
   ∇fk = solver.gx
   ck = solver.cx
+  d =  similar(∇fk) * 0  # used for Momentum, start with zeros
 
   iter = 1
   fk = obj(nlp, x)
@@ -114,7 +119,10 @@ function solve!(
 
   while !(optimal | tired)
 
-    ck .= x .- (∇fk ./ σk)
+    
+    d .= ∇fk .* (T(1) - gamma) + d .* gamma   
+    ck .= x .- (d ./ σk)
+    # ck .= x .- (∇fk ./ σk)
     ΔTk= norm_∇fk^2 / σk
     fck = obj(nlp, ck)
     if fck == -Inf
