@@ -312,3 +312,58 @@ function train_knet(
     #after each epoch if the accuracy better, stop 
     return best_acc, c
 end
+
+
+function zero_mean_inner(x, y, w = similar(x))
+    w .= x .* y
+    μw = mean(w)
+    w .= w .- μw
+    s = sum(w) + length(w) * μw
+    return s
+end
+
+function build_inner_product(x, y)
+    return x'y
+end
+
+function  mat_zero_mean(A,B)
+    T = eltype(A)
+    if  size(A)[2] == size(B)[1]
+        C = Array{T}(undef, size(A)[1],size(B)[2])
+        i=0
+        for row in eachrow(A)
+            i+=1
+            j =0
+            for col in eachcol(B)
+                j+=1
+                C[i,j]=zero_mean_inner(row,col)
+            end
+        end
+        return C
+    else 
+        error("Size mismatched, cannot multiply A and B.")
+        return -1
+    end
+end
+
+
+function  mat_mult(A,B)
+    T = eltype(A)
+    if  size(A)[2] == size(B)[1]
+        C = Array{T}(undef, size(A)[1],size(B)[2])
+        i = 0
+        for row in eachrow(A)
+            i += 1
+            j = 0
+            for col in eachcol(B)
+                j += 1
+                C[i,j] = build_inner_product(row,col)
+            end
+        end
+        return C
+    else 
+        error("Size mismatched, cannot multiply A and B.")
+        return -1
+    end
+end
+
