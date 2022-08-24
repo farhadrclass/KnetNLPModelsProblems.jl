@@ -1,5 +1,4 @@
 export R2, R2Solver
-
 """
     R2(nlp; kwargs...)
     solver = R2Solver(nlp;)
@@ -24,7 +23,7 @@ export R2, R2Solver
 # Output
 The value returned is a `GenericExecutionStats`, see `SolverCore.jl`.
 
-## Callback
+# Callback
 The callback is called after each iteration.
 The expected signature of the callback is `(nlp, solver)`, and its output is ignored.
 Notice that changing any of the input arguments will affect the subsequent iterations.
@@ -39,6 +38,7 @@ Notably, you can access, and modify, the following:
   - `solver.output.objective`: current objective function value.
   - `solver.output.status`: current status of the algorithm. Should be `:unknown` unless the algorithm has found a stopping criteria. Changing this to anything will stop the algorithm, but you should use `:user` to properly indicate the intention.
   - `solver.output.elapsed_time`: elapsed time in seconds.
+
 # Examples
 ```jldoctest
 using JSOSolvers, ADNLPModels
@@ -54,11 +54,8 @@ solver = R2Solver(nlp);
 stats = solve!(solver, nlp)
 # output
 "Execution stats: first-order stationary"
-
 ```
 """
-
-# TODO: Move to SolverCore
 function get_status(
   nlp;
   elapsed_time = 0.0,
@@ -112,7 +109,7 @@ function solve!(
     η2 = T(0.95),
     γ1 = T(1/2),
     γ2 = 1/γ1,
-    σmin = zero(T), #todo add max iteration
+    σmin = zero(T),
     max_time::Float64 = 3600.0,
     max_eval::Int = -1,
     verbose::Bool = true,
