@@ -8,6 +8,7 @@ using SolverCore
 using Plots
 using Knet, Images, MLDatasets
 using StochasticRounding
+using Statistics 
 using KnetNLPModels
 using Knet:
     Knet,
@@ -326,7 +327,14 @@ function build_inner_product(x, y)
     return x'y
 end
 
-function  mat_zero_mean(A,B)
+function  mat_zero_mean(M,N)
+    if (M isa AbstractMatrix)
+        A = M;
+        B = N;
+    else
+        A = M.value;
+        B = N.value;
+    end
     T = eltype(A)
     if  size(A)[2] == size(B)[1]
         C = Array{T}(undef, size(A)[1],size(B)[2])
@@ -347,7 +355,14 @@ function  mat_zero_mean(A,B)
 end
 
 
-function  mat_mult(A,B)
+function  mat_mult(M,N)  # hacky fix for now, need to write better for param type
+    if (M isa AbstractMatrix)
+        A = M;
+        B = N;
+    else
+        A = M.value;
+        B = N.value;
+    end
     T = eltype(A)
     if  size(A)[2] == size(B)[1]
         C = Array{T}(undef, size(A)[1],size(B)[2])
