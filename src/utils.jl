@@ -327,14 +327,24 @@ function build_inner_product(x, y)
     return x'y
 end
 
-function  mat_zero_mean(M,N)
-    if (M isa AbstractMatrix)
+function  mat_zero_mean(V,U)
+    M = copy(V)
+    N = copy(U)
+    flagP = false
+    if (M isa AbstractVecOrMat)
         A = M;
-        B = N;
+        flagP= true
     else
         A = M.value;
+    end
+    if (N isa AbstractVecOrMat)
+        B = N;
+        flagP= true
+    else
         B = N.value;
     end
+
+
     T = eltype(A)
     if  size(A)[2] == size(B)[1]
         C = Array{T}(undef, size(A)[1],size(B)[2])
@@ -347,6 +357,9 @@ function  mat_zero_mean(M,N)
                 C[i,j]=zero_mean_inner(row,col)
             end
         end
+        if (flagP)
+            C =param(C)
+        end
         return C
     else 
         error("Size mismatched, cannot multiply A and B.")
@@ -355,14 +368,20 @@ function  mat_zero_mean(M,N)
 end
 
 
-function  mat_mult(M,N)  # hacky fix for now, need to write better for param type
-    if (M isa AbstractMatrix)
+function  mat_mult(V,U)
+    M = copy(V)
+    N = copy(U)
+    if (M isa AbstractVecOrMat)
         A = M;
-        B = N;
     else
         A = M.value;
+    end
+    if (N isa AbstractVecOrMat)
+        B = N;
+    else
         B = N.value;
     end
+
     T = eltype(A)
     if  size(A)[2] == size(B)[1]
         C = Array{T}(undef, size(A)[1],size(B)[2])
