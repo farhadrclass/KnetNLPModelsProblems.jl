@@ -327,44 +327,46 @@ function build_inner_product(x, y)
     return x'y
 end
 
-function  mat_zero_mean(V,U)
-    M = copy(V)
-    N = copy(U)
-    flagP = false
-    if (M isa AbstractVecOrMat)
-        A = M;
-        flagP= true
-    else
-        A = M.value;
-    end
-    if (N isa AbstractVecOrMat)
-        B = N;
-        flagP= true
-    else
-        B = N.value;
-    end
+function  mat_zero_mean(M,N)
+    # M = copy(V)
+    # N = copy(U)
+    # if (M isa AbstractVecOrMat)
+    #     A = M;        
+    # else
+    #     A = M.value;
+    # end
+    # if (N isa AbstractVecOrMat)
+    #     B = N;
+        
+    # else
+    #     B = N.value;
+    # end
 
-
-    T = eltype(A)
-    if  size(A)[2] == size(B)[1]
-        C = Array{T}(undef, size(A)[1],size(B)[2])
-        i=0
-        for row in eachrow(A)
-            i+=1
-            j =0
-            for col in eachcol(B)
-                j+=1
-                C[i,j]=zero_mean_inner(row,col)
+    A = mat(M)
+    B=  mat(N)
+    if A isa AbstractVecOrMat
+        T = eltype(A)
+        if  size(A)[2] == size(B)[1]
+            C = Array{T}(undef, size(A)[1],size(B)[2])
+            i=0
+            for row in eachrow(A)
+                i+=1
+                j =0
+                for col in eachcol(B)
+                    j+=1
+                    C[i,j]=zero_mean_inner(row,col)
+                end
             end
+            return C
+        else 
+            error("Size mismatched, cannot multiply A and B.")
+            return -1
         end
-        if (flagP)
-            C =param(C)
-        end
-        return C
-    else 
-        error("Size mismatched, cannot multiply A and B.")
-        return -1
+    else
+        C = M*N
     end
+    return C
+
 end
 
 

@@ -47,49 +47,49 @@ function train_fc_small(;T = Float32,
     return epochs, acc, train_acc
 end
 
+# train_fc_small()
+# fig = plot(
+#     g0[1], 
+#     g0[2], 
+#     label = "max_iter = 1 - test",
+#     color = "darkred",
+#     markershape = :circle,
+#     lw = 2,
+#     thickness_scaling = 1.3,
+#     legend = :topleft,
+#     size=(1000, 500),
+#     title = "Accuracy of MNIST dataset - γ = 0.9",
+#     xlabel = "epoch",
+#     ylabel = "accuracy on test dataset"
+# )
 
-fig = plot(
-    g0[1], 
-    g0[2], 
-    label = "max_iter = 1 - test",
-    color = "darkred",
-    markershape = :circle,
-    lw = 2,
-    thickness_scaling = 1.3,
-    legend = :topleft,
-    size=(1000, 500),
-    title = "Accuracy of MNIST dataset - γ = 0.9",
-    xlabel = "epoch",
-    ylabel = "accuracy on test dataset"
-)
+# plot!(
+#     fig,
+#     g0[1], 
+#     g0[3], 
+#     label = "max_iter = 1 - train",
+#     color = "tomato",
+#     markershape = :diamond,
+#     lw = 2,
+#     thickness_scaling = 1.3,
+#     legend = :bottomright,
+# )
 
-plot!(
-    fig,
-    g0[1], 
-    g0[3], 
-    label = "max_iter = 1 - train",
-    color = "tomato",
-    markershape = :diamond,
-    lw = 2,
-    thickness_scaling = 1.3,
-    legend = :bottomright,
-)
+# plot!(
+#     fig,
+#     g0[1],
+#     g0_9[2],
+#     label = "max_iter = 10 - test",
+#     lw = 2,
+#     color = "blue4",
+#     markershape = :star4,
+# )
 
-plot!(
-    fig,
-    g0[1],
-    g0_9[2],
-    label = "max_iter = 10 - test",
-    lw = 2,
-    color = "blue4",
-    markershape = :star4,
-)
-
-plot!(
-    fig,
-    g0[1],
-    g0_9[3],
-    label = "max_iter = 10 - train",
-    color = "dodgerblue",
-    markershape = :xcross,
-)
+# plot!(
+#     fig,
+#     g0[1],
+#     g0_9[3],
+#     label = "max_iter = 10 - train",
+#     color = "dodgerblue",
+#     markershape = :xcross,
+# )
