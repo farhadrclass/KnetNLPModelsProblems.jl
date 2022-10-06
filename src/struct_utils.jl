@@ -17,7 +17,9 @@ struct Dense
     f::Any
     p::Any
 end
-(d::Dense)(x) = d.f.(d.w * mat(dropout(x, d.p)) .+ d.b)
+(d::Dense)(x) = d.f.(mat_zero_mean(d.w, mat(dropout(x, d.p))) .+ d.b )
+#(d::Dense)(x) = d.f.(d.w * mat(dropout(x, d.p)) .+ d.b) # todo change * in future 
+
 Dense(i::Int, o::Int, f = sigm; pdrop = 0.0) = Dense(param(o, i), param0(o), f, pdrop)
 
 struct Chainnll <: KnetNLPModels.Chain
