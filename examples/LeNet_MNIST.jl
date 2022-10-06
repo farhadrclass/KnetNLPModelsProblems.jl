@@ -1,6 +1,8 @@
+#TODO rewrite to use the new cb
+#TODO a plotter function 
+ 
+
 include("..//src//utils.jl")
-# include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
-include("..//src//R2.jl")
 include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
 
@@ -100,6 +102,7 @@ fig = plot(
     xlabel = "epoch",
     ylabel = "accuracy",
 )
+
 
 
 plot!(
