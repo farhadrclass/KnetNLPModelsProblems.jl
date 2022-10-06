@@ -1,5 +1,4 @@
 include("../../src/utils.jl")
-include("R2.jl")
 include("../../src/FC_mnist.jl")
 
 

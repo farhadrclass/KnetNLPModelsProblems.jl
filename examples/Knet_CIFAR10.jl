@@ -1,6 +1,6 @@
 include("..//src//utils.jl")
 include("..//src//NN_CIFAR10.jl")
-include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
+# include("/Users/nathanallaire/Desktop/GERAD/JSOSolvers.jl/src/R2.jl")
 
 T = Float32
 Knet.atype() = Array{T}
