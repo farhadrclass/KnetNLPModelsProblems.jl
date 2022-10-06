@@ -51,7 +51,6 @@ function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel)
 end
 
 global epochs = 0
-global max_epoch = 10
 
 function cb(nlp, solver, stats)
     endFlag = reset_minibatch_train_next!(nlp)
@@ -120,49 +119,6 @@ function train_knetNLPmodel!(
         β = β,
     )
 
-end
-
-
-function (
-    maxTime = 100,
-    all_data = false,
-    verbose = true,
-    epoch_verbose = true,
-    max_iter = 1,
-    gamma = 0.9,
-)
-
-
-
-    for j = 1:mepoch
-
-        acc = stochastic_epoch!(
-            modelNLP,
-            solver,
-            xtrn,
-            ytrn,
-            j;
-            verbose,
-            max_iter,
-            epoch_verbose,
-            mbatch,
-            gamma = gamma,
-        )
-
-
-  
-        # add!(acc_arr, (j, acc))
-        #TODO wirte to file 
-        # if acc > best_acc
-        #     #TODO write to file, KnetNLPModel, w
-        #     best_acc = acc
-        # end
-    end
-
-    c = hcat(iter_arr, acc_arr, train_acc_arr)
-    #after each epoch if the accuracy better, stop 
-    # all_data =true, go over them all, false only select minibatch
-    return best_acc, c
 end
 
 
