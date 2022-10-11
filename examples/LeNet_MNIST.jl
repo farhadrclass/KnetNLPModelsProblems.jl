@@ -29,9 +29,9 @@ Knet.atype() = Array{T}
 
 # size of minibatch 
 m = 512
-max_epochs = 50
+max_epochs = 10
 
-knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = 10)
+knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 println("Training R2 with KNET")
 trained_model = train_knetNLPmodel!(
     myModel,

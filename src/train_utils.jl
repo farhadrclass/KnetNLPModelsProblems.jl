@@ -53,6 +53,7 @@ function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel,i)
     next = iterate(nlp.training_minibatch_iterator, i)
 
     if (next === nothing)
+        println("fffffffffffff")
         nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
         #TODO end of the batch 
         return 0
@@ -66,11 +67,13 @@ end
 
 
 function cb(nlp, solver, stats,data::StochasticR2Data)
+    println(stats.status)
     data.epoch+=1
     data.i = reset_minibatch_train_next!(nlp,data.i)
-    endFlag=1
+    println(data.i)
     best_acc = 0
     if data.i == 0 
+        println("HERe")
         data.epoch += 1
         #TODO save the accracy
         new_w = stats.solution
@@ -81,11 +84,11 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
             best_acc = acc
         end
         # train accracy
-        data_buff = create_minibatch(
-            nlp.current_training_minibatch[1],
-            nlp.current_training_minibatch[2],
-            mbatch,
-        )
+        # data_buff = create_minibatch(
+        #     nlp.current_training_minibatch[1],
+        #     nlp.current_training_minibatch[2],
+        #     mbatch,
+        # )
         train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
         append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
 
@@ -131,6 +134,7 @@ function train_knetNLPmodel!(
         rtol = rtol,
         verbose = verbose,
         # max_iter = max_iter,
+        max_time = 10000000.0,#TODO issue with this
         β = β,
         callback = (nlp, solver, stats) -> cb(nlp, solver, stats, stochastic_data),
     )
