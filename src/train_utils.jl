@@ -28,6 +28,15 @@ using Knet:
 
 include("struct_utils.jl")
 
+mutable struct StochasticR2Data
+    epoch::Int
+    i::Int
+    # other fields as needed...
+    max_epoch::Int
+    acc_arr::Vector{Float64}
+    train_acc_arr::Vector{Float64}
+    iter_arr::Vector{Float64}
+  end
 
 """
     All_accuracy(nlp::AbstractKnetNLPModel)
@@ -39,14 +48,17 @@ All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.da
 Goes through the whole mini_batch one item at a time and not randomly
 TODO make a PR for KnetNLPmodels
 ```
-function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel)
-    next = iterate(nlp.current_training_minibatch)
+function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel,i)
+    i+=1
+    next = iterate(nlp.training_minibatch_iterator, i)
+
     if (next === nothing)
         nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
         #TODO end of the batch 
-        return -1
-    else
-        nlp.current_training_minibatch = next
+        return 0
+   else
+        nlp.current_training_minibatch = next[1]
+        return i
     end
 end
 
@@ -54,25 +66,27 @@ end
 
 
 function cb(nlp, solver, stats,data::StochasticR2Data)
-    endFlag = reset_minibatch_train_next!(nlp)
+    data.epoch+=1
+    data.i = reset_minibatch_train_next!(nlp,data.i)
+    endFlag=1
     best_acc = 0
-    if endFlag == -1
-        data.epochs = epochs + 1
+    if data.i == 0 
+        data.epoch += 1
         #TODO save the accracy
         new_w = stats.solution
-        set_vars!(modelNLP, new_w)
-        acc = KnetNLPModels.accuracy(modelNLP)
+        set_vars!(nlp, new_w)
+        acc = KnetNLPModels.accuracy(nlp)
         if acc > best_acc
             #TODO write to file, KnetNLPModel, w
             best_acc = acc
         end
         # train accracy
         data_buff = create_minibatch(
-            modelNLP.current_training_minibatch[1],
-            modelNLP.current_training_minibatch[2],
+            nlp.current_training_minibatch[1],
+            nlp.current_training_minibatch[2],
             mbatch,
-        ) # we need to create iterator it has one item
-        train_acc = Knet.accuracy(modelNLP.chain; data = data_buff)
+        )
+        train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
         append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
 
 
@@ -82,10 +96,10 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
         if j % 2 == 0
             @info("epoch #", j, "  acc= ", train_acc)
         end
-
+        
     end
 
-    if epochs == max_epoch
+    if data.epoch == data.max_epoch
         stats.status = :user
     end
 end
@@ -97,35 +111,31 @@ function train_knetNLPmodel!(
     solver,
     xtrn,
     ytrn;
-    mbatch = 64,     #todo see if we need this , in future we can update the number of batch size in different epochs
+    mbatch = 64,     #todo see if we need this , in future we can update the number of batch size in different epoch
     mepoch = 10,
-    verbose = false,
+    verbose = -1,
     β = T(0.9),
-    max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
+    atol = T(0.05),
+    rtol = T(0.05)
+    # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
-    epoch_verbose = true,
 ) where {T}
 
   
-    mutable struct StochasticR2Data
-        epoch::Int
-        # other fields as needed...
-        max_epoch::Int
-        acc_arr::Vector{Float64}
-        train_acc_arr::Vector{Float64}
-        iter_arr::Vector{Float64}
-      end
+
       
-      stochastic_data = Stochasticr2Data(0,mepoch,[],[],[])
-    solver_stats = solver(
+      stochastic_data = StochasticR2Data(0,0,mepoch,[],[],[])
+        solver_stats = solver(
         modelNLP;
-        atol = 0.05,
-        rtol = 0.05,
+        atol = atol,
+        rtol = rtol,
         verbose = verbose,
         # max_iter = max_iter,
         β = β,
         callback = (nlp, solver, stats) -> cb(nlp, solver, stats, stochastic_data),
     )
+    
+    return stochastic_data
 
 end
 

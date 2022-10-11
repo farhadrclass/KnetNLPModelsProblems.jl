@@ -1,8 +1,9 @@
 #TODO rewrite to use the new cb
 #TODO a plotter function 
- 
+
 
 include("..//src//utils.jl")
+include("..//src//train_utils.jl")
 include("..//src//Lenet_mnist.jl")
 include("..//src//FC_mnist.jl")
 
@@ -31,7 +32,7 @@ m = 512
 max_epochs = 50
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = 10)
-
+println("Training R2 with KNET")
 trained_model = train_knetNLPmodel!(
     myModel,
     R2,
@@ -39,88 +40,88 @@ trained_model = train_knetNLPmodel!(
     ytrn;
     mbatch = 10,
     mepoch = max_epochs,
-    maxTime = 100,
-    all_data = false,
-    verbose = true,
-    epoch_verbose = true,
-    gamma = 0.9
+    verbose = 1,
+    β = T(0.9),
+    atol = T(0.05),
+    rtol = T(0.05)
 )
-res = trained_model[2]
-epochs = res[:, 1]
-acc = res[:, 2]
-train_acc = res[:, 3]
 
 
+res = trained_model
+epochs = res.iter_arr
+acc = res.acc_arr
+train_acc = res.train_acc_arr
 
+println("Training SGD with KNET")
 # # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;mbatch=m, mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
-res_knet = trained_model_knet[2]
-epochs_knet = res_knet[:, 1]
-acc_knet = res_knet[:, 2]
-train_acc_knet = res_knet[:, 3]
+# trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;mbatch=m, mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
+# res_knet = trained_model_knet[2]
+# epochs_knet = res_knet[:, 1]
+# acc_knet = res_knet[:, 2]
+# train_acc_knet = res_knet[:, 3]
 
 
-fig = plot(
-    epochs,
-    # title = " test accuracy vs Epoch",
-    markershape = :star4,
-    acc,
-    label = "test accuracy R2",
-    legend = :bottomright,
-    xlabel = "epoch",
-    ylabel = "accuracy",
-)
-plot!(fig, epochs, markershape = :star1, acc_knet, label = "test accuracy SGD")
+# fig = plot(
+#     epochs,
+#     # title = " test accuracy vs Epoch",
+#     markershape = :star4,
+#     acc,
+#     label = "test accuracy R2",
+#     legend = :bottomright,
+#     xlabel = "epoch",
+#     ylabel = "accuracy",
+# )
+# plot!(fig, epochs, markershape = :star1, acc_knet, label = "test accuracy SGD")
 
-# plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
+# # plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
-fig = plot(
-    epochs,
-    title = "train accuracy vs Epoch on Float32",
-    markershape = :star4,
-    train_acc,
-    label = "train accuracy R2",
-    legend = :bottomright,
-    xlabel = "epoch",
-    ylabel = "accuracy",
-)
-plot!(fig, epochs, markershape = :star1, train_acc_knet, label = "train accuracy SGD")
-
-
-# plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
+# fig = plot(
+#     epochs,
+#     title = "train accuracy vs Epoch on Float32",
+#     markershape = :star4,
+#     train_acc,
+#     label = "train accuracy R2",
+#     legend = :bottomright,
+#     xlabel = "epoch",
+#     ylabel = "accuracy",
+# )
+# plot!(fig, epochs, markershape = :star1, train_acc_knet, label = "train accuracy SGD")
 
 
-#Plot all
-
-fig = plot(
-    epochs,
-    # title = " All accuracy vs Epoch on Float32",
-    markershape = :star1,
-    acc,
-    label = "test accuracy R2",
-    legend = :bottomright,
-    xlabel = "epoch",
-    ylabel = "accuracy",
-)
+# # plotSamples(myModel, xtrn, ytrn, MNIST; samples=10)
 
 
+# #Plot all
 
-plot!(
-    fig,
-    epochs,
-    markershape = :star1,
-    train_acc,
-    label = "train accuracy R2",
-    legend = :bottomright,
-    linestyle = :dash,
-)
-plot!(fig, epochs, markershape = :star4, acc_knet, label = "test accuracy SGD")
+# fig = plot(
+#     epochs,
+#     # title = " All accuracy vs Epoch on Float32",
+#     markershape = :star1,
+#     acc,
+#     label = "test accuracy R2",
+#     legend = :bottomright,
+#     xlabel = "epoch",
+#     ylabel = "accuracy",
+# )
 
-plot!(
-    fig,
-    epochs,
-    markershape = :star4,
-    train_acc_knet,
-    label = "train accuracy SGD",
-    linestyle = :dot,
-)
+
+
+# plot!(
+#     fig,
+#     epochs,
+#     markershape = :star1,
+#     train_acc,
+#     label = "train accuracy R2",
+#     legend = :bottomright,
+#     linestyle = :dash,
+# )
+# plot!(fig, epochs, markershape = :star4, acc_knet, label = "test accuracy SGD")
+
+# plot!(
+#     fig,
+#     epochs,
+#     markershape = :star4,
+#     train_acc_knet,
+#     label = "train accuracy SGD",
+#     linestyle = :dot,
+# )
