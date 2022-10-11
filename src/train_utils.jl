@@ -50,13 +50,14 @@ function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel)
     end
 end
 
-global epochs = 0
 
-function cb(nlp, solver, stats)
+
+
+function cb(nlp, solver, stats,data::StochasticR2Data)
     endFlag = reset_minibatch_train_next!(nlp)
     best_acc = 0
     if endFlag == -1
-        global epochs = epochs + 1
+        data.epochs = epochs + 1
         #TODO save the accracy
         new_w = stats.solution
         set_vars!(modelNLP, new_w)
@@ -72,11 +73,11 @@ function cb(nlp, solver, stats)
             mbatch,
         ) # we need to create iterator it has one item
         train_acc = Knet.accuracy(modelNLP.chain; data = data_buff)
-        append!(train_acc_arr, train_acc) #TODO fix this to save the acc
+        append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
 
 
-        append!(acc_arr, acc) #TODO fix this to save the acc
-        append!(iter_arr, j)
+        append!(data.acc_arr, acc) #TODO fix this to save the acc
+        append!(data.iter_arr, j)
 
         if j % 2 == 0
             @info("epoch #", j, "  acc= ", train_acc)
@@ -105,11 +106,17 @@ function train_knetNLPmodel!(
     epoch_verbose = true,
 ) where {T}
 
-    global max_epoch = mepoch
-    global acc_arr = []
-    global train_acc_arr = []
-    global iter_arr = []
-    
+  
+    mutable struct StochasticR2Data
+        epoch::Int
+        # other fields as needed...
+        max_epoch::Int
+        acc_arr::Vector{Float64}
+        train_acc_arr::Vector{Float64}
+        iter_arr::Vector{Float64}
+      end
+      
+      stochastic_data = Stochasticr2Data(0,mepoch,[],[],[])
     solver_stats = solver(
         modelNLP;
         atol = 0.05,
@@ -117,6 +124,7 @@ function train_knetNLPmodel!(
         verbose = verbose,
         # max_iter = max_iter,
         β = β,
+        callback = (nlp, solver, stats) -> cb(nlp, solver, stats, stochastic_data),
     )
 
 end
