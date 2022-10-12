@@ -35,7 +35,7 @@ mutable struct StochasticR2Data
     max_epoch::Int
     acc_arr::Vector{Float64}
     train_acc_arr::Vector{Float64}
-    iter_arr::Vector{Float64}
+    epoch_arr::Vector{Float64}
   end
 
 """
@@ -49,15 +49,15 @@ Goes through the whole mini_batch one item at a time and not randomly
 TODO make a PR for KnetNLPmodels
 ```
 function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel,i)
-    i+=1
-    next = iterate(nlp.training_minibatch_iterator, i)
-
-    if (next === nothing)
-        println("fffffffffffff")
+    i+= nlp.size_minibatch # update the i by mini_batch size
+    
+    if ( i>= nlp.training_minibatch_iterator.imax)
+    # if (next === nothing)
         nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
         #TODO end of the batch 
         return 0
    else
+        next = iterate(nlp.training_minibatch_iterator, i)
         nlp.current_training_minibatch = next[1]
         return i
     end
@@ -68,42 +68,45 @@ end
 
 function cb(nlp, solver, stats,data::StochasticR2Data)
     # println(stats.status)
-    data.i = reset_minibatch_train_next!(nlp,data.i)
-    # println(data.i)
-    best_acc = 0
-    if data.i == 0 
-        println("HERe")
-        data.epoch += 1
-        #TODO save the accracy
-        # new_w = stats.solution
-        # set_vars!(nlp, new_w)
-        acc = KnetNLPModels.accuracy(nlp)
-        if acc > best_acc
-            #TODO write to file, KnetNLPModel, w
-            best_acc = acc
+    # if stats.iter%5 ==0
+    #     println("Let each data go 5 iteratio")
+        data.i = reset_minibatch_train_next!(nlp,data.i)
+        best_acc = 0
+        if data.i == 0 
+            println("HERe")
+            data.epoch += 1
+            #TODO save the accracy
+            ## new_w = stats.solution
+            new_w = solver.x
+            set_vars!(nlp, new_w)
+            acc = KnetNLPModels.accuracy(nlp)
+            if acc > best_acc
+                #TODO write to file, KnetNLPModel, w
+                best_acc = acc
+            end
+            # train accracy
+            # data_buff = create_minibatch(
+            #     nlp.current_training_minibatch[1],
+            #     nlp.current_training_minibatch[2],
+            #     mbatch,
+            # )
+            train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
+            append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
+
+
+            append!(data.acc_arr, acc) #TODO fix this to save the acc
+            append!(data.epoch_arr, data.epoch)
+
+            if j % 5 == 0
+                @info("epoch #", data.epoch, "  acc= ", train_acc)
+            end
+            
         end
-        # train accracy
-        # data_buff = create_minibatch(
-        #     nlp.current_training_minibatch[1],
-        #     nlp.current_training_minibatch[2],
-        #     mbatch,
-        # )
-        train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
-        append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
 
-
-        append!(data.acc_arr, acc) #TODO fix this to save the acc
-        append!(data.iter_arr, j)
-
-        if j % 2 == 0
-            @info("epoch #", j, "  acc= ", train_acc)
+        if data.epoch == data.max_epoch
+            stats.status = :user
         end
-        
-    end
-
-    if data.epoch == data.max_epoch
-        stats.status = :user
-    end
+    # end
 end
 
 #runs over only one random one one step of R2Solver
@@ -169,7 +172,7 @@ function train_knet(
     dtrn = minibatch(xtrn, ytrn, mbatch; xsize = (28, 28, 1, :)) #TODO the dimention fix this, Nathan fixed that for CIFAR-10
     test_minibatch_iterator = create_minibatch_iter(xtst, ytst, mbatch) # this is only use so our accracy can be compared with KnetNLPModel, since thier accracy use this
     acc_arr = []
-    iter_arr = []
+    epoch_arr = []
     train_acc_arr = []
     best_acc = 0
     for j = 1:mepoch
@@ -187,7 +190,7 @@ function train_knet(
         end
 
         append!(acc_arr, acc) #TODO fix this to save the acc
-        append!(iter_arr, j)
+        append!(epoch_arr, j)
 
         if j % 2 == 0
             @info("epoch #", j, "  acc= ", train_acc)
@@ -199,7 +202,7 @@ function train_knet(
         #     best_acc = acc
         # end
     end
-    c = hcat(iter_arr, acc_arr, train_acc_arr)
+    c = hcat(epoch_arr, acc_arr, train_acc_arr)
     #after each epoch if the accuracy better, stop 
     return best_acc, c
 end
