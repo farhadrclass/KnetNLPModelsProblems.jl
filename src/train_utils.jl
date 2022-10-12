@@ -67,17 +67,16 @@ end
 
 
 function cb(nlp, solver, stats,data::StochasticR2Data)
-    println(stats.status)
-    data.epoch+=1
+    # println(stats.status)
     data.i = reset_minibatch_train_next!(nlp,data.i)
-    println(data.i)
+    # println(data.i)
     best_acc = 0
     if data.i == 0 
         println("HERe")
         data.epoch += 1
         #TODO save the accracy
-        new_w = stats.solution
-        set_vars!(nlp, new_w)
+        # new_w = stats.solution
+        # set_vars!(nlp, new_w)
         acc = KnetNLPModels.accuracy(nlp)
         if acc > best_acc
             #TODO write to file, KnetNLPModel, w
