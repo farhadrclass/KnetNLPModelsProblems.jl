@@ -38,75 +38,47 @@ mutable struct StochasticR2Data
     epoch_arr::Vector{Float64}
   end
 
-"""
-    All_accuracy(nlp::AbstractKnetNLPModel)
-Compute the accuracy of the network `nlp.chain` given the data in `nlp.tests`.
-uses the whole test data sets"""
-All_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
-
-```
-Goes through the whole mini_batch one item at a time and not randomly
-TODO make a PR for KnetNLPmodels
-```
-function reset_minibatch_train_next!(nlp::AbstractKnetNLPModel,i)
-    i+= nlp.size_minibatch # update the i by mini_batch size
-    
-    if ( i>= nlp.training_minibatch_iterator.imax)
-    # if (next === nothing)
-        nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
-        #TODO end of the batch 
-        return 0
-   else
-        next = iterate(nlp.training_minibatch_iterator, i)
-        nlp.current_training_minibatch = next[1]
-        return i
-    end
-end
-
-
 
 
 function cb(nlp, solver, stats,data::StochasticR2Data)
-    # println(stats.status)
-    # if stats.iter%5 ==0
-    #     println("Let each data go 5 iteratio")
-        data.i = reset_minibatch_train_next!(nlp,data.i)
-        best_acc = 0
-        if data.i == 0 
-            println("HERe")
-            data.epoch += 1
-            #TODO save the accracy
-            ## new_w = stats.solution
-            new_w = solver.x
-            set_vars!(nlp, new_w)
-            acc = KnetNLPModels.accuracy(nlp)
-            if acc > best_acc
-                #TODO write to file, KnetNLPModel, w
-                best_acc = acc
-            end
-            # train accracy
-            # data_buff = create_minibatch(
-            #     nlp.current_training_minibatch[1],
-            #     nlp.current_training_minibatch[2],
-            #     mbatch,
-            # )
-            train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
-            append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
 
-
-            append!(data.acc_arr, acc) #TODO fix this to save the acc
-            append!(data.epoch_arr, data.epoch)
-
-            if j % 5 == 0
+        if stats.iter % 2 == 0  #TODO testing what happens 
+            #TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
+            data.i = minibatch_next_train!(nlp,data.i)
+            best_acc = 0
+            if data.i == 0 
+                data.epoch += 1
+                
+                # if j % 2 == 0
                 @info("epoch #", data.epoch, "  acc= ", train_acc)
-            end
-            
-        end
+                # end
+                #TODO save the accracy
+                ## new_w = stats.solution
+                new_w = solver.x
+                set_vars!(nlp, new_w)
+                acc = KnetNLPModels.accuracy(nlp)
+                if acc > best_acc
+                    #TODO write to file, KnetNLPModel, w
+                    best_acc = acc
+                end
+                # train accracy
+                # data_buff = create_minibatch(
+                #     nlp.current_training_minibatch[1],
+                #     nlp.current_training_minibatch[2],
+                #     mbatch,
+                # )
+                train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
+                append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
+                append!(data.acc_arr, acc) #TODO fix this to save the acc
+                append!(data.epoch_arr, data.epoch)
 
-        if data.epoch == data.max_epoch
-            stats.status = :user
+                
+            end
+
+            if data.epoch == data.max_epoch
+                stats.status = :user
+            end
         end
-    # end
 end
 
 #runs over only one random one one step of R2Solver

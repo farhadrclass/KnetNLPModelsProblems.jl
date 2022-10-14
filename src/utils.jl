@@ -27,6 +27,34 @@ using Knet:
     Data
 
 include("struct_utils.jl")
+
+
+"""
+    all_accuracy(nlp::AbstractKnetNLPModel)
+Compute the accuracy of the network `nlp.chain` given the data in `nlp.tests`.
+uses the whole test data sets"""
+all_accuracy(nlp::AbstractKnetNLPModel) = Knet.accuracy(nlp.chain; data = nlp.data_test)
+"""
+Gets the next minibatch
+Input:
+nlp:: KnetNLPModel 
+i:: current location in the iterator #TODO maybe do it in the knetnlpmodels as a current location
+"""
+function minibatch_next_train!(nlp::AbstractKnetNLPModel,i)
+    i+= nlp.size_minibatch # update the i by mini_batch size
+        if ( i>= nlp.training_minibatch_iterator.imax)
+        # reset to the begining and return xero 
+        nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
+        return 0
+   else
+        next = iterate(nlp.training_minibatch_iterator, i)
+        nlp.current_training_minibatch = next[1]
+        return i
+    end
+end
+
+
+
 function loaddata(data_flag, T)
     if (data_flag == 1)
         @info("Loading MNIST...")

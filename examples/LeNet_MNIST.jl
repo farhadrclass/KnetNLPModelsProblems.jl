@@ -2,10 +2,6 @@
 #TODO a plotter function 
 
 
-include("..//src//utils.jl")
-include("..//src//train_utils.jl")
-include("..//src//Lenet_mnist.jl")
-include("..//src//FC_mnist.jl")
 
 using Knet:
     Knet,
@@ -22,6 +18,12 @@ using Knet:
     relu,
     minibatch,
     Data
+
+    
+include("..//src//utils.jl")
+include("..//src//train_utils.jl")
+include("..//src//Lenet_mnist.jl")
+include("..//src//FC_mnist.jl")
 
 T = Float32
 Knet.atype() = Array{T}
@@ -48,7 +50,7 @@ trained_model = train_knetNLPmodel!(
 
 
 res = trained_model
-epochs = res.iter_arr
+epochs = res.epoch_arr
 acc = res.acc_arr
 train_acc = res.train_acc_arr
 
