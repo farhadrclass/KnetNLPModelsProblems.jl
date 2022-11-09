@@ -45,6 +45,13 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
         if stats.iter % 2 == 0  #TODO testing what happens 
             #TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
             data.i = minibatch_next_train!(nlp,data.i)
+            # TODO add \rho and n and structur , solver object struck ?
+            #  Todo   
+            # set_objective!(stats, fck) # old value
+            #   grad!(nlp, x, ∇fk) #grad is wrong 
+            #   norm_∇fk = norm(∇fk) # wrong 
+            # todo accept or not accept the step? 
+            # reset the 
             best_acc = 0
             if data.i == 0 
                 data.epoch += 1
@@ -56,7 +63,7 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
                 ## new_w = stats.solution
                 new_w = solver.x
                 set_vars!(nlp, new_w)
-                acc = KnetNLPModels.accuracy(nlp)
+                acc = KnetNLPModels.accuracy(nlp) 
                 if acc > best_acc
                     #TODO write to file, KnetNLPModel, w
                     best_acc = acc
@@ -67,7 +74,7 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
                 #     nlp.current_training_minibatch[2],
                 #     mbatch,
                 # )
-                train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator)
+                train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
                 append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
                 append!(data.acc_arr, acc) #TODO fix this to save the acc
                 append!(data.epoch_arr, data.epoch)
