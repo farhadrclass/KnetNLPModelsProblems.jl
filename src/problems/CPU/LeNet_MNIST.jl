@@ -1,29 +1,3 @@
-#TODO rewrite to use the new cb
-#TODO a plotter function 
-
-
-
-using Knet:
-    Knet,
-    conv4,
-    pool,
-    mat,
-    nll,
-    accuracy,
-    progress,
-    sgd,
-    param,
-    param0,
-    dropout,
-    relu,
-    minibatch,
-    Data
-
-    
-include("..//src//utils.jl")
-include("..//src//train_utils.jl")
-include("..//src//Lenet_mnist.jl")
-include("..//src//FC_mnist.jl")
 
 T = Float32
 Knet.atype() = Array{T}
@@ -34,10 +8,10 @@ m = 1000
 max_epochs = 10
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
-println("Training R2 with KNET")
+println("Training SR2 with KNET")
 trained_model = train_knetNLPmodel!(
     myModel,
-    R2,
+    SR2,
     xtrn,
     ytrn;
     mbatch = m,

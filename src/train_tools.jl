@@ -1,50 +1,4 @@
-# using Revise        # importantly, this must come before
-using JSOSolvers
-using LinearAlgebra
-using Random
-using Printf
-using NLPModels
-using SolverCore
-using Plots
-using Knet, Images, MLDatasets
-using StochasticRounding
-using Statistics
-using KnetNLPModels
-using Knet:
-    Knet,
-    conv4,
-    pool,
-    mat,
-    nll,
-    accuracy,
-    progress,
-    sgd,
-    param,
-    param0,
-    dropout,
-    relu,
-    minibatch,
-    Data
-
-include("struct_utils.jl")
-
-mutable struct StochasticR2Data
-    epoch::Int
-    i::Int
-    # other fields as needed...
-    max_epoch::Int
-    acc_arr::Vector{Float64}
-    train_acc_arr::Vector{Float64}
-    epoch_arr::Vector{Float64}
-  end
-
-
-
-function cb(nlp, solver, stats,data::StochasticR2Data)
-
-        if stats.iter % 2 == 0  #TODO testing what happens 
-            #TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
-            data.i = minibatch_next_train!(nlp,data.i)
+#TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
             # TODO add \rho and n and structur , solver object struck ?
             #  Todo   
             # set_objective!(stats, fck) # old value
@@ -52,40 +6,37 @@ function cb(nlp, solver, stats,data::StochasticR2Data)
             #   norm_∇fk = norm(∇fk) # wrong 
             # todo accept or not accept the step? 
             # reset the 
+
+function cb(nlp, solver, stats,param::AbstractParameterSet{T},data::StochasticR2Data)
+            data.i = KnetNLPModels.minibatch_next_train!(nlp)
             best_acc = 0
-            if data.i == 0 
-                data.epoch += 1
-                
+            if data.i == 1 
+                data.epoch += 1                
                 # if j % 2 == 0
-                @info("epoch #", data.epoch, "  acc= ", train_acc)
                 # end
                 #TODO save the accracy
-                ## new_w = stats.solution
-                new_w = solver.x
-                set_vars!(nlp, new_w)
+                # new_w = solver.x
+                # set_vars!(nlp, new_w)
                 acc = KnetNLPModels.accuracy(nlp) 
                 if acc > best_acc
-                    #TODO write to file, KnetNLPModel, w
                     best_acc = acc
                 end
-                # train accracy
-                # data_buff = create_minibatch(
-                #     nlp.current_training_minibatch[1],
-                #     nlp.current_training_minibatch[2],
-                #     mbatch,
-                # )
+                # TODO  make sure we calculate mini-batch accracy
                 train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
+                @info("epoch #", data.epoch, "  acc= ", train_acc)
                 append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
                 append!(data.acc_arr, acc) #TODO fix this to save the acc
                 append!(data.epoch_arr, data.epoch)
-
-                
             end
 
             if data.epoch == data.max_epoch
                 stats.status = :user
             end
-        end
+            # we need to reset the grad!()
+            # set_objective!(stats, fck) # old value
+            #   grad!(nlp, x, ∇fk) #grad is wrong 
+            #   norm_∇fk = norm(∇fk) # wrong 
+
 end
 
 #runs over only one random one one step of R2Solver
@@ -105,28 +56,15 @@ function train_knetNLPmodel!(
     #TODO  add max itration 
 ) where {T}
 
-
-
-
-#x::V = nlp.meta.x0,
-
-
-
-# max_time::Float64 = 30.0,
-# max_eval::Int = -1,
-# β::T = T(0),
-
-      
+    # TODO add param here 
+    param = R2ParameterSet{T}() #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
       stochastic_data = StochasticR2Data(0,0,mepoch,[],[],[])
         solver_stats = solver(
         modelNLP;
-        atol = atol,
-        rtol = rtol,
+        param,       
         verbose = verbose,
-        # max_iter = max_iter,
         max_time = 10000000.0,#TODO issue with this
-        β = β,
-        callback = (nlp, solver, stats) -> cb(nlp, solver, stats, stochastic_data),
+        callback = (nlp, solver, stats) -> cb(nlp, solver, stats ,param, stochastic_data),
     )
     
     return stochastic_data
@@ -135,7 +73,7 @@ end
 
 
 ###############
-#Knet
+#  Knet SGD training
 
 
 create_minibatch_iter(x_data, y_data, minibatch_size) = Knet.minibatch(

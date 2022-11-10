@@ -1,8 +1,8 @@
 """
-NN for CIFAR10 data
+lenet for CIFAR10 data
 """
 
-include("utils.jl")
+
 
 """
 A NN model, close to LeNet

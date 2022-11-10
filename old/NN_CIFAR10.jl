@@ -2,7 +2,6 @@
 NN for CIFAR10 data
 """
 
-include("utils.jl")
 
 """
 A NN model, close to LeNet
@@ -16,7 +15,7 @@ function cifar10_prob(xtrn, ytrn, xtst, ytst; minibatchSize = 100)
         Conv(5, 5, 20, 50),
         Dense(800, 500),
         Dense(500, 10, identity),
-    ) 
+    )
 
     LeNetNLPModel = KnetNLPModel(
         LeNet;

@@ -10,6 +10,7 @@ JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
 Knet = "1902f260-5fb4-5aff-8c31-6271790ab950"
 KnetNLPModels = "9601d21a-7b1e-4fc7-9dab-5c3f545997d5"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
+SolverParameters = "adf32eb0-fe7e-47bb-93e4-fe96e72f6839"
 
 [compat]
 julia = "1.6"

@@ -2,9 +2,6 @@
 Fully connceted MNIST data
 """
 
-
-include("utils.jl")
-
 """
 Fully conncected with one hidden layers
 Data need to be MNIST (#todo test with CIFAR10))
