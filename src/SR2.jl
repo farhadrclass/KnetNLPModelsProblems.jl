@@ -108,7 +108,9 @@ function SolverCore.solve!(
   nlp::AbstractNLPModel{T, V},
   stats::GenericExecutionStats{T, V};
   x::V = nlp.meta.x0,
-  param::AbstractParameterSet{T},
+  param::AbstractParameterSet,
+  max_time::Float64 = 30.0,
+  max_eval::Int = -1,
   callback = (args...) -> nothing, 
   verbose::Int = 0,
 ) where {T, V}

@@ -2,7 +2,6 @@
 Lenet for  MNIST data
 """
 
-include("utils.jl")
 
 """
 Lenet model
