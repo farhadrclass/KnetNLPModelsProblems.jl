@@ -30,12 +30,13 @@ using Knet:
     minibatch,
     Data
 # Write your package code here.
+include("solver_pram.jl")
 include("JSOSolver_SR2.jl")
 # include("SR2.jl") #TODO replace this 
 
 include("struct_DNN.jl")
 include("utils.jl")
-include("solver_pram.jl")
+
 include("train_tools.jl")
 
 # including the models for DNN

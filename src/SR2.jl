@@ -84,7 +84,7 @@ end
 
 @doc (@doc SR2Solver) function SR2(nlp::AbstractNLPModel{T, V}; kwargs...) where {T, V}
   solver = SR2Solver(nlp)
-  return solve!(solver, nlp; kwargs...)
+  return SolverCore.solve!(solver, nlp; kwargs...)
 end
 
 function SolverCore.reset!(solver::SR2Solver{T}) where {T}
@@ -161,7 +161,6 @@ function SolverCore.solve!(
   callback(nlp, solver, stats)
 
   done = stats.status != :unknown
-
   while !done
     if param.β.value == 0
       ck .= x .- (solver.gx ./ σk)

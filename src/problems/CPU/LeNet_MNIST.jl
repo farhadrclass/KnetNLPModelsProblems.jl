@@ -4,7 +4,7 @@ Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
-m = 1000
+m = 500
 max_epochs = 10
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)

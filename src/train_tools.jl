@@ -45,10 +45,10 @@ function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2D
     end
    #TODO resett the SR2 grad and values
     window = 5; #TODO change that 
-    append!(data.grads_arr , solver.gx) # to keep the grads from each call 
+    append!(data.grads_arr , norm(solver.gx)) # to keep the grads from each call 
     # avg_grad_mv = mv_avg(data.grads_arr, window)
     avg_grad_mv = ema_avg(data.grads_arr, window)
-    if (avg_grad_mv <= data.ϵ)
+    if (-0.1 <= avg_grad_mv <= data.ϵ )
         stats.status = :first_order #optimal TODO change this
     end
     best_acc = 0
@@ -103,11 +103,12 @@ function train_knetNLPmodel!(
 
     # TODO add param here 
     param = R2ParameterSet{R}() #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [],[])
+    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [],[],0.01)
     solver_stats = solver(
         modelNLP;
         param = param,
-        verbose = verbose,
+        # verbose = verbose,
+        verbose = 1,
         # max_time = 10000000.0,#TODO issue with this
         callback = (nlp, solver, stats) ->
             cb(nlp, solver, stats, param, stochastic_data),
