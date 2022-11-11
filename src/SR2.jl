@@ -168,8 +168,14 @@ function SolverCore.solve!(
       d .= solver.gx .* (T(1) - param.β.value) .+ d .* param.β.value
       ck .= x .- (d ./ σk)
     end
+
+  
     ΔTk = norm_∇fk^2 / σk
+    
     fck = obj(nlp, ck)
+
+      
+    # ΔTk = fck - (\phi _x )
     if fck == -Inf
       set_status!(stats, :unbounded)
       break
@@ -183,6 +189,11 @@ function SolverCore.solve!(
     elseif ρk < param.η1.value
       σk = σk * param.γ2.value
     end
+    println("-----------------------")
+    println("ρk =",ρk ,"  obj= ", stats.objective," fck= ", fck," ΔTk= ", ΔTk)
+    println("param.η2.value= ",param.η2.value ,"  param.η1.value ", param.η1.value)
+    println("σk =",σk ,"  first= ", ρk >= param.η2.value," second= ",ρk < param.η1.value)
+    println("-----------------------")
 
     # Acceptance of the new candidate
     if ρk >= param.η1.value
@@ -196,7 +207,7 @@ function SolverCore.solve!(
     set_time!(stats, time() - start_time)
     set_dual_residual!(stats, norm_∇fk)
     # optimal = norm_∇fk ≤ ϵ
-    optimal = false
+    optimal = false #TODO for now
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
       @info infoline
@@ -215,6 +226,15 @@ function SolverCore.solve!(
     )
 
     callback(nlp, solver, stats)
+    ###TODO  not sure about this but 
+    set_objective!(stats, obj(nlp, x))
+    grad!(nlp, x, solver.gx)
+    norm_∇fk = norm(solver.gx)
+    set_dual_residual!(stats, norm_∇fk)
+  
+    σk = 2^round(log2(norm_∇fk + 1))
+
+    #####
 
     done = stats.status != :unknown
   end
