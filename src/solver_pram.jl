@@ -70,4 +70,6 @@ mutable struct StochasticR2Data
     acc_arr::Vector{Float64}
     train_acc_arr::Vector{Float64}
     epoch_arr::Vector{Float64}
+    grads_arr::Vector{Float64} #TODO fix this type to be dynamic
+    ϵ::Float64 #TODO Fix with type T
   end

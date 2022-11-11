@@ -196,7 +196,8 @@ function SolverCore.solve!(
     set_iter!(stats, stats.iter + 1)
     set_time!(stats, time() - start_time)
     set_dual_residual!(stats, norm_∇fk)
-    optimal = norm_∇fk ≤ ϵ
+    # optimal = norm_∇fk ≤ ϵ
+    optimal = false
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
       @info infoline

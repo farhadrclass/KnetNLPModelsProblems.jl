@@ -7,14 +7,55 @@
 # todo accept or not accept the step? 
 # reset the 
 
+
+
+###############################
+# Moving avarage
+using MarketTechnicals
+
+#calculate Exponential Moving Average
+function ema_avg(arr, window)
+    size_arr = length(arr)
+    if size_arr >= window
+        return last(ema(arr, window)) #$ using MarketTechnicals
+    end
+    return -1 # means the size is not reached yet
+end
+
+
+#calculate moving avarage
+function mv_avg(arr, window)
+    size_arr = length(arr)
+    if size_arr >= window
+        # return (sum(arr[size_arr-window+1:size_arr])/window)
+        #  or
+        return last(sma(arr, window)) #$ using MarketTechnicals
+    end
+    return -1 # means the size is not reached yet
+end
+
+
+################################################
+
 function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2Data)
     data.i = KnetNLPModels.minibatch_next_train!(nlp)
+    if (data.i == 2)
+        norm_∇fk = norm(solver.gx)
+        data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
+    end
    #TODO resett the SR2 grad and values
-    
-    
-    
+    window = 5; #TODO change that 
+    append!(data.grads_arr , solver.gx) # to keep the grads from each call 
+    # avg_grad_mv = mv_avg(data.grads_arr, window)
+    avg_grad_mv = ema_avg(data.grads_arr, window)
+    if (avg_grad_mv <= data.ϵ)
+        stats.status = :first_order #optimal TODO change this
+    end
     best_acc = 0
     if data.i == 1
+        
+        # reset
+        data.grads_arr = [] 
         data.epoch += 1
         acc = KnetNLPModels.accuracy(nlp)
         if acc > best_acc
@@ -62,7 +103,7 @@ function train_knetNLPmodel!(
 
     # TODO add param here 
     param = R2ParameterSet{R}() #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [])
+    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [],[])
     solver_stats = solver(
         modelNLP;
         param = param,
