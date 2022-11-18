@@ -66,179 +66,196 @@ stats = solve!(solver, nlp)
 "Execution stats: first-order stationary"
 ```
 """
-mutable struct SR2Solver{T, V} <: AbstractOptimizationSolver
-  x::V
-  gx::V
-  cx::V
-  d::V   # used for momentum term
-  # param::AbstractParameterSet{T} #TODO should I add it here?
+mutable struct SR2Solver{T,V} <: AbstractOptimizationSolver
+    x::V
+    gx::V
+    cx::V
+    d::V   # used for momentum term
+    # param::AbstractParameterSet{T} #TODO should I add it here?
 end
 
-function SR2Solver(nlp::AbstractNLPModel{T, V}) where {T, V}
-  x = similar(nlp.meta.x0)
-  gx = similar(nlp.meta.x0)
-  cx = similar(nlp.meta.x0)
-  d = fill!(similar(nlp.meta.x0), 0)
-  return SR2Solver{T, V}(x, gx, cx, d)
+function SR2Solver(nlp::AbstractNLPModel{T,V}) where {T,V}
+    x = similar(nlp.meta.x0)
+    gx = similar(nlp.meta.x0)
+    cx = similar(nlp.meta.x0)
+    d = fill!(similar(nlp.meta.x0), 0)
+    return SR2Solver{T,V}(x, gx, cx, d)
 end
 
-@doc (@doc SR2Solver) function SR2(nlp::AbstractNLPModel{T, V}; kwargs...) where {T, V}
-  solver = SR2Solver(nlp)
-  return SolverCore.solve!(solver, nlp; kwargs...)
+@doc (@doc SR2Solver) function SR2(
+    nlp::AbstractNLPModel{T,V};
+    atol::T = √eps(T),
+    rtol::T = √eps(T),
+    η1 = eps(T)^(1 / 4),
+    η2 = T(0.95),
+    γ1 = T(1 / 2),
+    γ2 = 1 / γ1,
+    σmin = zero(T),# change this
+    β::T = T(0),
+    kwargs...,
+) where {T,V}
+    solver = SR2Solver(nlp)
+    my_param = R2ParameterSet{R}(atol, rtol, η1, η2, γ1,γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    return SolverCore.solve!(solver, nlp; param=my_param,kwargs...)
 end
 
 function SolverCore.reset!(solver::SR2Solver{T}) where {T}
-  solver.d .= zero(T)
-  solver
+    solver.d .= zero(T)
+    solver
 end
 SolverCore.reset!(solver::SR2Solver, ::AbstractNLPModel) = reset!(solver)
 
 
+#TODO rtol, Rtol  are out ,?
 
 # param.atol.value::T = √eps(T),
 # param.rtol.value::T = √eps(T),
+
 # param.η1.value = eps(T)^(1 / 4),
 # param.η2.value = T(0.95),
 # param.γ1.value = T(1 / 2),
 # param.γ2.value = 1 / param.γ1.value,
 # param.σmin.value = zero(T),
 # param.β.value::T = T(0),
+
 function SolverCore.solve!(
-  solver::SR2Solver{T, V},
-  nlp::AbstractNLPModel{T, V},
-  stats::GenericExecutionStats{T, V};
-  x::V = nlp.meta.x0,
-  param::AbstractParameterSet,
-  max_time::Float64 = 30.0,
-  max_eval::Int = -1,
-  callback = (args...) -> nothing, 
-  verbose::Int = 0,
-) where {T, V}
-  unconstrained(nlp) || error("SR2 should only be called on unconstrained problems.")
+    solver::SR2Solver{T,V},
+    nlp::AbstractNLPModel{T,V},
+    stats::GenericExecutionStats{T,V};    ;
+    x::V = nlp.meta.x0,
+    param::AbstractParameterSet,#TODO either defult constructor if empty or move it up 
+    max_time::Float64 = 30.0,
+    max_eval::Int = -1,
+    callback = (args...) -> nothing,
+    verbose::Int = 0,
+) where {T,V}
+    unconstrained(nlp) || error("SR2 should only be called on unconstrained problems.")
 
-  reset!(stats)
-  start_time = time()
-  set_time!(stats, 0.0)
+    reset!(stats)
+    start_time = time()
+    set_time!(stats, 0.0)
 
-  x = solver.x .= x
-#   ∇fk = solver.gx
-  ck = solver.cx
-  d = solver.d
+    x = solver.x .= x
+    #   ∇fk = solver.gx
+    ck = solver.cx
+    d = solver.d
 
-  set_iter!(stats, 0)
-  set_objective!(stats, obj(nlp, x))
-
-  grad!(nlp, x, solver.gx)
-  norm_∇fk = norm(solver.gx)
-  set_dual_residual!(stats, norm_∇fk)
-
-  σk = 2^round(log2(norm_∇fk + 1))
-
-  # Stopping criterion: 
-  ϵ = param.atol.value + param.rtol.value * norm_∇fk
-  optimal = norm_∇fk ≤ ϵ
-  if optimal
-    @info("Optimal point found at initial point")
-    @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
-    @info @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
-  end
-  if verbose > 0 && mod(stats.iter, verbose) == 0
-    @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
-    infoline = @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
-  end
-
-  set_status!(
-    stats,
-    get_status(
-      nlp,
-      elapsed_time = stats.elapsed_time,
-      optimal = optimal,
-      max_eval = max_eval,
-      max_time = max_time,
-    ),
-  )
-
-  callback(nlp, solver, stats)
-
-  done = stats.status != :unknown
-  while !done
-    if param.β.value == 0
-      ck .= x .- (solver.gx ./ σk)
-    else
-      d .= solver.gx .* (T(1) - param.β.value) .+ d .* param.β.value
-      ck .= x .- (d ./ σk)
-    end
-
-  
-    ΔTk = norm_∇fk^2 / σk
-    
-    fck = obj(nlp, ck)
-
-      
-    # ΔTk = fck - (\phi _x )
-    if fck == -Inf
-      set_status!(stats, :unbounded)
-      break
-    end
-
-    ρk = (stats.objective - fck) / ΔTk
-
-    # Update regularization parameters
-    if ρk >= param.η2.value
-      σk = max(param.σmin.value, param.γ1.value * σk)
-    elseif ρk < param.η1.value
-      σk = σk * param.γ2.value
-    end
-    println("-----------------------")
-    println("ρk =",ρk ,"  obj= ", stats.objective," fck= ", fck," ΔTk= ", ΔTk)
-    println("param.η2.value= ",param.η2.value ,"  param.η1.value ", param.η1.value)
-    println("σk =",σk ,"  first= ", ρk >= param.η2.value," second= ",ρk < param.η1.value)
-    println("-----------------------")
-
-    # Acceptance of the new candidate
-    if ρk >= param.η1.value
-      x .= ck
-      set_objective!(stats, fck)
-      grad!(nlp, x, solver.gx)
-      norm_∇fk = norm(solver.gx)
-    end
-
-    set_iter!(stats, stats.iter + 1)
-    set_time!(stats, time() - start_time)
-    set_dual_residual!(stats, norm_∇fk)
-    # optimal = norm_∇fk ≤ ϵ
-    optimal = false #TODO for now
-
-    if verbose > 0 && mod(stats.iter, verbose) == 0
-      @info infoline
-      infoline = @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
-    end
-
-    set_status!(
-      stats,
-      get_status(
-        nlp,
-        elapsed_time = stats.elapsed_time,
-        optimal = optimal,
-        max_eval = max_eval,
-        max_time = max_time,
-      ),
-    )
-
-    callback(nlp, solver, stats)
-    ###TODO  not sure about this but 
+    set_iter!(stats, 0)
     set_objective!(stats, obj(nlp, x))
+
     grad!(nlp, x, solver.gx)
     norm_∇fk = norm(solver.gx)
     set_dual_residual!(stats, norm_∇fk)
-  
+
     σk = 2^round(log2(norm_∇fk + 1))
 
-    #####
+    # Stopping criterion: 
+    ϵ = param.atol.value + param.rtol.value * norm_∇fk #TODO 
+    optimal = norm_∇fk ≤ ϵ
+    if optimal
+        @info("Optimal point found at initial point")
+        @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
+        @info @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
+    end
+    if verbose > 0 && mod(stats.iter, verbose) == 0
+        @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
+        infoline =
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
+    end
+
+    set_status!(
+        stats,
+        get_status(
+            nlp,
+            elapsed_time = stats.elapsed_time,
+            optimal = optimal,
+            max_eval = max_eval,
+            max_time = max_time,
+        ),
+    )
+
+    callback(nlp, solver, stats)
 
     done = stats.status != :unknown
-  end
+    while !done
+        if param.β.value == 0
+            ck .= x .- (solver.gx ./ σk)
+        else
+            d .= solver.gx .* (T(1) - param.β.value) .+ d .* param.β.value
+            ck .= x .- (d ./ σk)
+        end
 
-  set_solution!(stats, x)
-  return stats
+
+        ΔTk = norm_∇fk^2 / σk
+
+        fck = obj(nlp, ck)
+
+
+        # ΔTk = fck - (\phi _x )
+        if fck == -Inf
+            set_status!(stats, :unbounded)
+            break
+        end
+
+        ρk = (stats.objective - fck) / ΔTk
+
+        # Update regularization parameters
+        if ρk >= param.η2.value
+            σk = max(param.σmin.value, param.γ1.value * σk)
+        elseif ρk < param.η1.value
+            σk = σk * param.γ2.value
+        end
+        # println("-----------------------")
+        # println("ρk =",ρk ,"  obj= ", stats.objective," fck= ", fck," ΔTk= ", ΔTk)
+        # println("param.η2.value= ",param.η2.value ,"  param.η1.value ", param.η1.value)
+        # println("σk =",σk ,"  first= ", ρk >= param.η2.value," second= ",ρk < param.η1.value)
+        # println("-----------------------")
+
+        # Acceptance of the new candidate
+        if ρk >= param.η1.value
+            x .= ck
+            set_objective!(stats, fck)
+            grad!(nlp, x, solver.gx)
+            norm_∇fk = norm(solver.gx)
+        end
+
+        set_iter!(stats, stats.iter + 1)
+        set_time!(stats, time() - start_time)
+        set_dual_residual!(stats, norm_∇fk)
+        # optimal = norm_∇fk ≤ ϵ
+        optimal = false #TODO for now
+
+        if verbose > 0 && mod(stats.iter, verbose) == 0
+            @info infoline
+            infoline =
+                @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
+        end
+
+        set_status!(
+            stats,
+            get_status(
+                nlp,
+                elapsed_time = stats.elapsed_time,
+                optimal = optimal,
+                max_eval = max_eval,
+                max_time = max_time,
+            ),
+        )
+
+        callback(nlp, solver, stats)
+        ###TODO  not sure about this but 
+        set_objective!(stats, obj(nlp, x))
+        grad!(nlp, x, solver.gx)
+        norm_∇fk = norm(solver.gx)
+        set_dual_residual!(stats, norm_∇fk)
+
+        σk = 2^round(log2(norm_∇fk + 1))
+
+        #####
+
+        done = stats.status != :unknown
+    end
+
+    set_solution!(stats, x)
+    return stats
 end

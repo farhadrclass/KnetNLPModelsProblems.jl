@@ -39,50 +39,50 @@ end
 
 function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2Data)
     # if stats.iter %5==0
-    data.i = KnetNLPModels.minibatch_next_train!(nlp)
-    if (data.i == 2)
-        # norm_∇fk = norm(solver.gx)
-        # data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
-        ## maybe I only use 
-        data.ϵ = param.atol.value + param.rtol.value
-    end
-   #TODO resett the SR2 grad and values
-    window = 5; #TODO change that 
-    append!(data.grads_arr , norm(solver.gx)) # to keep the grads from each call 
-    # avg_grad_mv = mv_avg(data.grads_arr, window)
-    avg_grad_mv = ema_avg(data.grads_arr, window)
-    if (-0.1 <= avg_grad_mv <= data.ϵ )
-        println("avg_grad_mv = ",avg_grad_mv ," ϵ= ", data.ϵ)
-        stats.status = :first_order #optimal TODO change this
-    end
-    best_acc = 0
-    if data.i == 1
+    # data.i = KnetNLPModels.minibatch_next_train!(nlp)
+#     if (data.i == 2)
+#         # norm_∇fk = norm(solver.gx)
+#         # data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
+#         ## maybe I only use 
+#         data.ϵ = param.atol.value + param.rtol.value
+#     end
+#    #TODO resett the SR2 grad and values
+#     window = 5; #TODO change that 
+#     append!(data.grads_arr , norm(solver.gx)) # to keep the grads from each call 
+#     # avg_grad_mv = mv_avg(data.grads_arr, window)
+#     avg_grad_mv = ema_avg(data.grads_arr, window)
+#     if (-0.1 <= avg_grad_mv <= data.ϵ )
+#         println("avg_grad_mv = ",avg_grad_mv ," ϵ= ", data.ϵ)
+#         stats.status = :first_order #optimal TODO change this
+#     end
+#     best_acc = 0
+#     if data.i == 1
         
-        # reset
-        data.grads_arr = [] 
-        data.epoch += 1
-        println("epoch ",data.epoch," max_epoch ",data.max_epoch)
-        # acc = KnetNLPModels.accuracy(nlp)
-        # if acc > best_acc
-        #     best_acc = acc
-        # end
-        # # TODO  make sure we calculate mini-batch accracy
-        # train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
-        # @info("epoch #", data.epoch, "  acc= ", train_acc)
-        # append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
-        # append!(data.acc_arr, acc) #TODO fix this to save the acc
-        # append!(data.epoch_arr, data.epoch)
-    end
+#         # reset
+#         data.grads_arr = [] 
+#         data.epoch += 1
+#         println("epoch ",data.epoch," max_epoch ",data.max_epoch)
+#         # acc = KnetNLPModels.accuracy(nlp)
+#         # if acc > best_acc
+#         #     best_acc = acc
+#         # end
+#         # # TODO  make sure we calculate mini-batch accracy
+#         # train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
+#         # @info("epoch #", data.epoch, "  acc= ", train_acc)
+#         # append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
+#         # append!(data.acc_arr, acc) #TODO fix this to save the acc
+#         # append!(data.epoch_arr, data.epoch)
+#     end
 
-    if data.epoch == data.max_epoch
-        stats.status = :user
-    end
-    # we need to reset the ∇fk and σk here since the data has changes
-    # we also do not need to know β since the momentum doesn't make sense in case where the data has changed?
+#     if data.epoch == data.max_epoch
+#         stats.status = :user
+#     end
+#     # we need to reset the ∇fk and σk here since the data has changes
+#     # we also do not need to know β since the momentum doesn't make sense in case where the data has changed?
 
-    # set_objective!(stats, fck) # old value
-    #   grad!(nlp, x, ∇fk) #grad is wrong 
-    #   norm_∇fk = norm(∇fk) # wrong 
+#     # set_objective!(stats, fck) # old value
+#     #   grad!(nlp, x, ∇fk) #grad is wrong 
+#     #   norm_∇fk = norm(∇fk) # wrong 
 
 end
 
@@ -98,7 +98,7 @@ function train_knetNLPmodel!(
     verbose = -1,
     β = 0.9,
     atol = 0.05,
-    rtol = 0.05,
+    rtol = 0.09,
     R = Float32,
 
     # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
@@ -107,16 +107,16 @@ function train_knetNLPmodel!(
 
 
     # TODO add param here 
-    param = R2ParameterSet{R}() #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    # my_param = R2ParameterSet{R}(atol,rtol,0.1, 0.3, 1.1, 1.9, zero(R), 0.9) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
     stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [],[],0.01)
     solver_stats = solver(
         modelNLP;
-        param = param,
+        # param = my_param,
         # verbose = verbose,
         verbose = 1,
         # max_time = 10000000.0,#TODO issue with this
         callback = (nlp, solver, stats) ->
-            cb(nlp, solver, stats, param, stochastic_data),
+            cb(nlp, solver, stats, my_param, stochastic_data),
     )
 
     return stochastic_data
