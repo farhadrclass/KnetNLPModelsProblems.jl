@@ -4,7 +4,7 @@ Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
-m = 500
+m = 1000
 max_epochs = 10
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
@@ -17,9 +17,9 @@ trained_model = train_knetNLPmodel!(
     mbatch = m,
     mepoch = max_epochs,
     verbose = 1,
-    β = T(0.3),
-    atol = T(0.05),
-    rtol = T(0.05),
+    # β = T(0.3),
+    # atol = T(0.05),
+    # rtol = T(0.05),
 )
 
 
@@ -28,7 +28,18 @@ epochs = res.epoch_arr
 acc = res.acc_arr
 train_acc = res.train_acc_arr
 
-println("Training SGD with KNET")
+fig = plot(
+    epochs,
+    # title = " test accuracy vs Epoch",
+    markershape = :star4,
+    acc,
+    label = "test accuracy R2",
+    legend = :bottomright,
+    xlabel = "epoch",
+    ylabel = "accuracy",
+)
+
+# println("Training SGD with KNET")
 # # Train Knet
 # trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;mbatch=m, mepoch = 5) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
 # res_knet = trained_model_knet[2]

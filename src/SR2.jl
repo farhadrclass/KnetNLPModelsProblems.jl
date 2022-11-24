@@ -242,12 +242,12 @@ function SolverCore.solve!(
 
         callback(nlp, solver, stats, param)
         ###TODO  not sure about this but  , move to cb and add more info
-        # set_objective!(stats, obj(nlp, x))
-        # grad!(nlp, x, solver.gx)
-        # norm_∇fk = norm(solver.gx)
-        # set_dual_residual!(stats, norm_∇fk)
+        set_objective!(stats, obj(nlp, x))
+        grad!(nlp, x, solver.gx)
+        norm_∇fk = norm(solver.gx)
+        set_dual_residual!(stats, norm_∇fk)
 
-        # σk = 2^round(log2(norm_∇fk + 1)) # let's not change
+        σk = 2^round(log2(norm_∇fk + 1)) # let's not change
 
         #####
         # I am forcing it not to stop
@@ -255,5 +255,8 @@ function SolverCore.solve!(
     end
 
     set_solution!(stats, x)
+    if verbose > 0 
+        @info @sprintf "%s: %s" "stats.status" stats.status
+    end
     return stats
 end
