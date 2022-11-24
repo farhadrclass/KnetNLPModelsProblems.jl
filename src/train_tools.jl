@@ -13,76 +13,63 @@
 # Moving avarage
 using MarketTechnicals
 
-#calculate Exponential Moving Average
-function ema_avg(arr, window)
-    size_arr = length(arr)
-    if size_arr >= window
-        return last(ema(arr, window)) #$ using MarketTechnicals
-    end
-    return -1 # means the size is not reached yet
-end
-
-
-#calculate moving avarage
-function mv_avg(arr, window)
-    size_arr = length(arr)
-    if size_arr >= window
-        # return (sum(arr[size_arr-window+1:size_arr])/window)
-        #  or
-        return last(sma(arr, window)) #$ using MarketTechnicals
-    end
-    return -1 # means the size is not reached yet
-end
-
+#TODO call the SMA after the window> size_arr but SMA should be simple
 
 ################################################
 
-function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2Data)
+#TODO potential benefit if cb works we call less than SGD
+
+function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2Data, window=5)
+    # Max epoch
+    if data.epoch == data.max_epoch
+        stats.status = :user
+        return 
+    end
+
     # if stats.iter %5==0
-    # data.i = KnetNLPModels.minibatch_next_train!(nlp)
-#     if (data.i == 2)
-#         # norm_∇fk = norm(solver.gx)
-#         # data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
-#         ## maybe I only use 
-#         data.ϵ = param.atol.value + param.rtol.value
-#     end
-#    #TODO resett the SR2 grad and values
-#     window = 5; #TODO change that 
-#     append!(data.grads_arr , norm(solver.gx)) # to keep the grads from each call 
-#     # avg_grad_mv = mv_avg(data.grads_arr, window)
-#     avg_grad_mv = ema_avg(data.grads_arr, window)
-#     if (-0.1 <= avg_grad_mv <= data.ϵ )
-#         println("avg_grad_mv = ",avg_grad_mv ," ϵ= ", data.ϵ)
-#         stats.status = :first_order #optimal TODO change this
-#     end
-#     best_acc = 0
-#     if data.i == 1
-        
-#         # reset
-#         data.grads_arr = [] 
-#         data.epoch += 1
-#         println("epoch ",data.epoch," max_epoch ",data.max_epoch)
-#         # acc = KnetNLPModels.accuracy(nlp)
-#         # if acc > best_acc
-#         #     best_acc = acc
-#         # end
-#         # # TODO  make sure we calculate mini-batch accracy
-#         # train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
-#         # @info("epoch #", data.epoch, "  acc= ", train_acc)
-#         # append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
-#         # append!(data.acc_arr, acc) #TODO fix this to save the acc
-#         # append!(data.epoch_arr, data.epoch)
-#     end
+    data.i = KnetNLPModels.minibatch_next_train!(nlp)
+    #TODO check if we need to update the weights
+    set_vars!(nlp, stats.solution) #updating the weight of the model 
+   
+    # calculate the stopping condition on the first time the epoch is called
+    if (data.i == 2)
+        norm_∇fk = norm(solver.gx)
+        data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
+        ## maybe I only use 
+        # data.ϵ = param.atol.value + param.rtol.value
+    end
 
-#     if data.epoch == data.max_epoch
-#         stats.status = :user
-#     end
-#     # we need to reset the ∇fk and σk here since the data has changes
-#     # we also do not need to know β since the momentum doesn't make sense in case where the data has changed?
+    # to keep the grads from each call 
+    append!(data.grads_arr , norm(solver.gx)) 
 
-#     # set_objective!(stats, fck) # old value
-#     #   grad!(nlp, x, ∇fk) #grad is wrong 
-#     #   norm_∇fk = norm(∇fk) # wrong 
+    if length(data.grads_arr) >= window
+        avg_grad_mv = last(sma(arr, window)) # Simple moving avarage
+        # avg_grad_mv = last(ema(arr, window)) # Exponential Moving Average  
+        if (avg_grad_mv <= data.ϵ)
+            @info @sprintf "%s:  %.1E , %s:  %.1E " "avg_grad_mv" avg_grad_mv "ϵ" data.ϵ
+            stats.status = :first_order #optimal TODO change this
+        end
+    end
+    if data.i == 1   # once one epoch is finished     
+        # reset
+        data.grads_arr = [] 
+        data.epoch += 1
+        acc = KnetNLPModels.accuracy(nlp) # accracy of the minibatch on the test Data
+        # TODO  make sure we calculate mini-batch accracy
+        train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
+        # TODO train acc either on mini-batch or epoch level on All
+        @info @sprintf "Current epoch:  %d out of max epoch: %d, \t Acc: %f " data.epoch data.max_epoch train_acc
+        append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
+        append!(data.acc_arr, acc) #TODO fix this to save the acc
+        append!(data.epoch_arr, data.epoch)
+    end
+
+    # we need to reset the ∇fk and σk here since the data has changes
+    # we also do not need to know β since the momentum doesn't make sense in case where the data has changed?
+
+    # set_objective!(stats, fck) # old value
+    #   grad!(nlp, x, ∇fk) #grad is wrong 
+    #   norm_∇fk = norm(∇fk) # wrong 
 
 end
 
@@ -104,7 +91,8 @@ function train_knetNLPmodel!(
     # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
 )
-
+        # epoch = 100
+        # mbatch = 128
 
     # TODO add param here 
     # my_param = R2ParameterSet{R}(atol,rtol,0.1, 0.3, 1.1, 1.9, zero(R), 0.9) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here

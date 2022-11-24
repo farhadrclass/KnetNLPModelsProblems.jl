@@ -86,7 +86,7 @@ end
     nlp::AbstractNLPModel{T,V};
     atol::T = √eps(T),
     rtol::T = √eps(T),
-    η1 = eps(T)^(1 / 4),
+    η1 = eps(T)^(1 / 4),#TODO check if this is too big
     η2 = T(0.95),
     γ1 = T(1 / 2),
     γ2 = 1 / γ1,
@@ -243,13 +243,13 @@ function SolverCore.solve!(
         )
 
         callback(nlp, solver, stats)
-        ###TODO  not sure about this but 
+        ###TODO  not sure about this but  , move to cb and add more info
         set_objective!(stats, obj(nlp, x))
         grad!(nlp, x, solver.gx)
         norm_∇fk = norm(solver.gx)
         set_dual_residual!(stats, norm_∇fk)
 
-        σk = 2^round(log2(norm_∇fk + 1))
+        # σk = 2^round(log2(norm_∇fk + 1)) # let's not change
 
         #####
 

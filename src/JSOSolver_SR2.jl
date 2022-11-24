@@ -41,6 +41,12 @@ struct R2ParameterSet{T<:AbstractFloat} <: AbstractParameterSet  #TODO change it
 
 
     function R2ParameterSet{T}(atol, rtol, η1, η2, γ1, γ2, σmin, β) where {T<:AbstractFloat} # empthy constructor 
+        #TODO 
+        atol >= 0 || throw(DomainError("invalid atol, atol>=0"))
+        rtol >= 0 || throw(DomainError("invalid rtol, rtol >=0"))
+        0 < η1 <= η2 <= 1 || throw(DomainError("invalid: 0 < η1 <= η2 <= 1"))
+        
+        
         if atol <= 0
             throw(DomainError("invalid atol"))
         elseif rtol <= 0
