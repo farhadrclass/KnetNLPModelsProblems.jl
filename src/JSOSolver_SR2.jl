@@ -45,8 +45,8 @@ struct R2ParameterSet{T<:AbstractFloat} <: AbstractParameterSet  #TODO change it
         atol >= 0 || throw(DomainError("invalid atol, atol>=0"))
         rtol >= 0 || throw(DomainError("invalid rtol, rtol >=0"))
         0 < η1 <= η2 <= 1 || throw(DomainError("invalid: 0 < η1 <= η2 <= 1"))
-        0 <= β <= 1 ||  throw(DomainError("invalid: β needs to be between [0,1)"))
-        1 <= γ1 <= γ2 ||      throw(DomainError("invalid γ1 <= γ2"))
+        0 <= β < 1 ||  throw(DomainError("invalid: β needs to be between [0,1)"))
+        0 < γ1 < 1 <= γ2 ||      throw(DomainError("invalid 0 < γ1 < 1 <= γ2 "))
             new(
                 Parameter(T(atol), RealInterval(T(-1000), T(1000)), "atol"), #TODO actual name 
                 Parameter(T(rtol), RealInterval(T(-1000), T(1000)), "rtol"),

@@ -50,8 +50,8 @@ function cb(
     append!(data.grads_arr, norm(solver.gx))
 
     if length(data.grads_arr) >= window
-        avg_grad_mv = last(sma(arr, window)) # Simple moving avarage
-        # avg_grad_mv = last(ema(arr, window)) # Exponential Moving Average  
+        avg_grad_mv = last(sma(data.grads_arr, window)) # Simple moving avarage
+        # avg_grad_mv = last(ema(data.grads_arr, window)) # Exponential Moving Average  
         if (avg_grad_mv <= data.ϵ)
             @info @sprintf "%s:  %.1E , %s:  %.1E " "avg_grad_mv" avg_grad_mv "ϵ" data.ϵ
             stats.status = :first_order #optimal TODO change this

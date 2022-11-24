@@ -159,9 +159,9 @@ function SolverCore.solve!(
     end
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
-        @info @sprintf "%5s  %9s  %7s  %7s %7s %7s %7s %7s" "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" "η1" "η2"
+        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s  %7s  %7s" "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" "η1" "η2"
         infoline =
-            @sprintf "%5d  %9.2e  %7.1e  %7.1e %7.1e %7.1e %7.1e %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk 0.0 0.0 param.η1.value param.η2.value
     end
 
     set_status!(
@@ -175,7 +175,7 @@ function SolverCore.solve!(
         ),
     )
 
-    callback(nlp, solver, stats, nlp_param)
+    callback(nlp, solver, stats, param)
 
     done = stats.status != :unknown
     while !done
@@ -224,7 +224,7 @@ function SolverCore.solve!(
         if verbose > 0 && mod(stats.iter, verbose) == 0
             @info infoline
             infoline =
-                @sprintf "%5d  %9.2e  %7.1e  %7.1e %7.1e %7.1e %7.1e %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
+                @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
             # infoline =
             # @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
         end
@@ -240,7 +240,7 @@ function SolverCore.solve!(
             ),
         )
 
-        callback(nlp, solver, stats, nlp_param)
+        callback(nlp, solver, stats, param)
         ###TODO  not sure about this but  , move to cb and add more info
         # set_objective!(stats, obj(nlp, x))
         # grad!(nlp, x, solver.gx)
