@@ -95,8 +95,8 @@ end
     kwargs...,
 ) where {T,V}
     solver = SR2Solver(nlp)
-    my_param = R2ParameterSet{R}(atol, rtol, η1, η2, γ1, γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    return SolverCore.solve!(solver, nlp; param = my_param, kwargs...)
+    nlp_param = R2ParameterSet{R}(atol, rtol, η1, η2, γ1, γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    return SolverCore.solve!(solver, nlp; param = nlp_param, kwargs...)
 end
 
 function SolverCore.reset!(solver::SR2Solver{T}) where {T}
@@ -157,10 +157,11 @@ function SolverCore.solve!(
         @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
         @info @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
     end
+
     if verbose > 0 && mod(stats.iter, verbose) == 0
-        @info @sprintf "%5s  %9s  %7s  %7s " "iter" "f" "‖∇f‖" "σ"
+        @info @sprintf "%5s  %9s  %7s  %7s %7s %7s %7s %7s" "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" "η1" "η2"
         infoline =
-            @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e %7.1e %7.1e %7.1e %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
     end
 
     set_status!(
@@ -174,7 +175,7 @@ function SolverCore.solve!(
         ),
     )
 
-    callback(nlp, solver, stats, my_param)
+    callback(nlp, solver, stats, nlp_param)
 
     done = stats.status != :unknown
     while !done
@@ -205,11 +206,6 @@ function SolverCore.solve!(
         elseif ρk < param.η1.value
             σk = σk * param.γ2.value
         end
-        # println("-----------------------")
-        # println("ρk =",ρk ,"  obj= ", stats.objective," fck= ", fck," ΔTk= ", ΔTk)
-        # println("param.η2.value= ",param.η2.value ,"  param.η1.value ", param.η1.value)
-        # println("σk =",σk ,"  first= ", ρk >= param.η2.value," second= ",ρk < param.η1.value)
-        # println("-----------------------")
 
         # Acceptance of the new candidate
         if ρk >= param.η1.value
@@ -228,7 +224,9 @@ function SolverCore.solve!(
         if verbose > 0 && mod(stats.iter, verbose) == 0
             @info infoline
             infoline =
-                @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
+                @sprintf "%5d  %9.2e  %7.1e  %7.1e %7.1e %7.1e %7.1e %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
+            # infoline =
+            # @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
         end
 
         set_status!(
@@ -242,17 +240,17 @@ function SolverCore.solve!(
             ),
         )
 
-        callback(nlp, solver, stats, my_param)
+        callback(nlp, solver, stats, nlp_param)
         ###TODO  not sure about this but  , move to cb and add more info
-        set_objective!(stats, obj(nlp, x))
-        grad!(nlp, x, solver.gx)
-        norm_∇fk = norm(solver.gx)
-        set_dual_residual!(stats, norm_∇fk)
+        # set_objective!(stats, obj(nlp, x))
+        # grad!(nlp, x, solver.gx)
+        # norm_∇fk = norm(solver.gx)
+        # set_dual_residual!(stats, norm_∇fk)
 
         # σk = 2^round(log2(norm_∇fk + 1)) # let's not change
 
         #####
-
+        # I am forcing it not to stop
         done = stats.status != :unknown
     end
 
