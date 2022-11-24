@@ -45,30 +45,19 @@ struct R2ParameterSet{T<:AbstractFloat} <: AbstractParameterSet  #TODO change it
         atol >= 0 || throw(DomainError("invalid atol, atol>=0"))
         rtol >= 0 || throw(DomainError("invalid rtol, rtol >=0"))
         0 < η1 <= η2 <= 1 || throw(DomainError("invalid: 0 < η1 <= η2 <= 1"))
-
-
-        if atol <= 0
-            throw(DomainError("invalid atol"))
-        elseif rtol <= 0
-            throw(DomainError("invalid rtol"))
-        elseif β >= 1 || β < 0 #TODO check range on beta
-            throw(DomainError("invalid: β needs to be between [0,1)"))
-        elseif γ1 < 1 || γ1 >= γ2
-            throw(DomainError("invalid γ1 <= γ2"))
-        elseif (η1 > η2 || η1 <= 0 || η1 > 1 || η2 > 1)
-            throw(DomainError("invalid: 0 < η1 <= η2 <= 1"))
-        else
+        0 <= β <= 1 ||  throw(DomainError("invalid: β needs to be between [0,1)"))
+        1 <= γ1 <= γ2 ||      throw(DomainError("invalid γ1 <= γ2"))
             new(
-                Parameter(T(atol), RealInterval(T(0), T(1)), "atol"), #TODO actual name 
-                Parameter(T(rtol), RealInterval(T(0), T(1)), "rtol"),
-                Parameter(T(η1), RealInterval(T(0), T(1)), "η1"),
-                Parameter(T(η2), RealInterval(T(0), T(10)), "η2"),
-                Parameter(T(γ1), RealInterval(T(1), T(10)), "γ1"),
-                Parameter(T(γ2), RealInterval(T(1), T(10)), "γ2"),
-                Parameter(σmin, RealInterval(T(0), T(1000)), "σmin"),
-                Parameter(T(β), RealInterval(T(0), T(1000)), "β"),
+                Parameter(T(atol), RealInterval(T(-1000), T(1000)), "atol"), #TODO actual name 
+                Parameter(T(rtol), RealInterval(T(-1000), T(1000)), "rtol"),
+                Parameter(T(η1), RealInterval(T(-1000), T(1000)), "η1"),
+                Parameter(T(η2), RealInterval(T(-10000), T(10000)), "η2"),
+                Parameter(T(γ1), RealInterval(T(-10000), T(1000)), "γ1"),
+                Parameter(T(γ2), RealInterval(T(-10000), T(1000)), "γ2"),
+                Parameter(σmin, RealInterval(T(-10000), T(1000)), "σmin"),
+                Parameter(T(β), RealInterval(T(-10000), T(1000)), "β"),
             )
-        end
+        
     end
 
 end

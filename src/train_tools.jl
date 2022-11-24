@@ -92,7 +92,8 @@ function train_knetNLPmodel!(
     verbose = -1,
     atol::T = √eps(T),
     rtol::T = √eps(T),
-    η1 = eps(T)η2 = T(0.95),
+    η1 = eps(T),
+    η2 = T(0.95),
     γ1 = T(1 / 2),
     γ2 = 1 / γ1,
     σmin = zero(T),# change this
