@@ -19,18 +19,25 @@ using MarketTechnicals
 
 #TODO potential benefit if cb works we call less than SGD
 
-function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2Data, window=5)
+function cb(
+    nlp,
+    solver,
+    stats,
+    param::AbstractParameterSet,
+    data::StochasticR2Data,
+    window = 5,
+)
     # Max epoch
     if data.epoch == data.max_epoch
         stats.status = :user
-        return 
+        return
     end
 
     # if stats.iter %5==0
     data.i = KnetNLPModels.minibatch_next_train!(nlp)
     #TODO check if we need to update the weights
     set_vars!(nlp, stats.solution) #updating the weight of the model 
-   
+
     # calculate the stopping condition on the first time the epoch is called
     if (data.i == 2)
         norm_∇fk = norm(solver.gx)
@@ -40,7 +47,7 @@ function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2D
     end
 
     # to keep the grads from each call 
-    append!(data.grads_arr , norm(solver.gx)) 
+    append!(data.grads_arr, norm(solver.gx))
 
     if length(data.grads_arr) >= window
         avg_grad_mv = last(sma(arr, window)) # Simple moving avarage
@@ -52,7 +59,7 @@ function cb(nlp, solver, stats, param::AbstractParameterSet, data::StochasticR2D
     end
     if data.i == 1   # once one epoch is finished     
         # reset
-        data.grads_arr = [] 
+        data.grads_arr = []
         data.epoch += 1
         acc = KnetNLPModels.accuracy(nlp) # accracy of the minibatch on the test Data
         # TODO  make sure we calculate mini-batch accracy
@@ -80,33 +87,42 @@ function train_knetNLPmodel!(
     solver,
     xtrn,
     ytrn;
-    mbatch = 64,     #todo see if we need this , in future we can update the number of batch size in different epoch
-    mepoch = 10,
+    mbatch = 64, #128     #TODO see if we need this , in future we can update the number of batch size in different epoch
+    mepoch = 10, # 100
     verbose = -1,
-    β = 0.9,
-    atol = 0.05,
-    rtol = 0.09,
-    R = Float32,
+    atol::T = √eps(T),
+    rtol::T = √eps(T),
+    η1 = eps(T)η2 = T(0.95),
+    γ1 = T(1 / 2),
+    γ2 = 1 / γ1,
+    σmin = zero(T),# change this
+    β::T = T(0),
 
     # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
-)
-        # epoch = 100
-        # mbatch = 128
+) where {T}
+    # epoch = 100
+    # mbatch = 128
 
     # TODO add param here 
-    # my_param = R2ParameterSet{R}(atol,rtol,0.1, 0.3, 1.1, 1.9, zero(R), 0.9) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [],[],0.01)
+    # nlp_param = R2ParameterSet{R}(atol,rtol,0.1, 0.3, 1.1, 1.9, zero(R), 0.9) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+
+
+    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [], [], atol)
     solver_stats = solver(
         modelNLP;
-        # param = my_param,
-        # verbose = verbose,
-        verbose = 1,
-        # max_time = 10000000.0,#TODO issue with this
-        callback = (nlp, solver, stats) ->
-            cb(nlp, solver, stats, my_param, stochastic_data),
+        atol = atol,
+        rtol = rtol,
+        η1 = η1,
+        η2 = η2,
+        γ1 = γ1,
+        γ2 = γ2,
+        σmin = σmin,
+        β = β,
+        verbose = verbose,
+        callback = (nlp, solver, stats, nlp_param) ->
+            cb(nlp, solver, stats, nlp_param, stochastic_data),
     )
-
     return stochastic_data
 
 end

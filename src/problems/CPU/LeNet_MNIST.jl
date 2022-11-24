@@ -19,7 +19,7 @@ trained_model = train_knetNLPmodel!(
     verbose = 1,
     β = T(0.3),
     atol = T(0.05),
-    rtol = T(0.05)
+    rtol = T(0.05),
 )
 
 

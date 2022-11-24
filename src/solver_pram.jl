@@ -16,4 +16,4 @@ mutable struct StochasticR2Data
     epoch_arr::Vector{Float64}
     grads_arr::Vector{Float64} #TODO fix this type to be dynamic
     ϵ::Float64 #TODO Fix with type T
-  end
+end

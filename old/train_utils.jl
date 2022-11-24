@@ -36,56 +36,56 @@ mutable struct StochasticR2Data
     acc_arr::Vector{Float64}
     train_acc_arr::Vector{Float64}
     epoch_arr::Vector{Float64}
-  end
+end
 
 
 
-function cb(nlp, solver, stats,data::StochasticR2Data)
+function cb(nlp, solver, stats, data::StochasticR2Data)
 
-        if stats.iter % 2 == 0  #TODO testing what happens 
-            #TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
-            data.i = minibatch_next_train!(nlp,data.i)
-            # TODO add \rho and n and structur , solver object struck ?
-            #  Todo   
-            # set_objective!(stats, fck) # old value
-            #   grad!(nlp, x, ∇fk) #grad is wrong 
-            #   norm_∇fk = norm(∇fk) # wrong 
-            # todo accept or not accept the step? 
-            # reset the 
-            best_acc = 0
-            if data.i == 0 
-                data.epoch += 1
-                
-                # if j % 2 == 0
-                @info("epoch #", data.epoch, "  acc= ", train_acc)
-                # end
-                #TODO save the accracy
-                ## new_w = stats.solution
-                new_w = solver.x
-                set_vars!(nlp, new_w)
-                acc = KnetNLPModels.accuracy(nlp) 
-                if acc > best_acc
-                    #TODO write to file, KnetNLPModel, w
-                    best_acc = acc
-                end
-                # train accracy
-                # data_buff = create_minibatch(
-                #     nlp.current_training_minibatch[1],
-                #     nlp.current_training_minibatch[2],
-                #     mbatch,
-                # )
-                train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
-                append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
-                append!(data.acc_arr, acc) #TODO fix this to save the acc
-                append!(data.epoch_arr, data.epoch)
+    if stats.iter % 2 == 0  #TODO testing what happens 
+        #TODO one potential problem is that we stop before doing the epoch if the stopping condition happens, needs to fix it so it run the epochs not check the ϵ 
+        data.i = minibatch_next_train!(nlp, data.i)
+        # TODO add \rho and n and structur , solver object struck ?
+        #  Todo   
+        # set_objective!(stats, fck) # old value
+        #   grad!(nlp, x, ∇fk) #grad is wrong 
+        #   norm_∇fk = norm(∇fk) # wrong 
+        # todo accept or not accept the step? 
+        # reset the 
+        best_acc = 0
+        if data.i == 0
+            data.epoch += 1
 
-                
+            # if j % 2 == 0
+            @info("epoch #", data.epoch, "  acc= ", train_acc)
+            # end
+            #TODO save the accracy
+            ## new_w = stats.solution
+            new_w = solver.x
+            set_vars!(nlp, new_w)
+            acc = KnetNLPModels.accuracy(nlp)
+            if acc > best_acc
+                #TODO write to file, KnetNLPModel, w
+                best_acc = acc
             end
+            # train accracy
+            # data_buff = create_minibatch(
+            #     nlp.current_training_minibatch[1],
+            #     nlp.current_training_minibatch[2],
+            #     mbatch,
+            # )
+            train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
+            append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
+            append!(data.acc_arr, acc) #TODO fix this to save the acc
+            append!(data.epoch_arr, data.epoch)
 
-            if data.epoch == data.max_epoch
-                stats.status = :user
-            end
+
         end
+
+        if data.epoch == data.max_epoch
+            stats.status = :user
+        end
+    end
 end
 
 #runs over only one random one one step of R2Solver
@@ -100,7 +100,7 @@ function train_knetNLPmodel!(
     verbose = -1,
     β = T(0.9),
     atol = T(0.05),
-    rtol = T(0.05)
+    rtol = T(0.05),
     # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
 ) where {T}
@@ -108,17 +108,17 @@ function train_knetNLPmodel!(
 
 
 
-#x::V = nlp.meta.x0,
+    #x::V = nlp.meta.x0,
 
 
 
-# max_time::Float64 = 30.0,
-# max_eval::Int = -1,
-# β::T = T(0),
+    # max_time::Float64 = 30.0,
+    # max_eval::Int = -1,
+    # β::T = T(0),
 
-      
-      stochastic_data = StochasticR2Data(0,0,mepoch,[],[],[])
-        solver_stats = solver(
+
+    stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [])
+    solver_stats = solver(
         modelNLP;
         atol = atol,
         rtol = rtol,
@@ -128,7 +128,7 @@ function train_knetNLPmodel!(
         β = β,
         callback = (nlp, solver, stats) -> cb(nlp, solver, stats, stochastic_data),
     )
-    
+
     return stochastic_data
 
 end

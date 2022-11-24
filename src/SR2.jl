@@ -95,8 +95,8 @@ end
     kwargs...,
 ) where {T,V}
     solver = SR2Solver(nlp)
-    my_param = R2ParameterSet{R}(atol, rtol, η1, η2, γ1,γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    return SolverCore.solve!(solver, nlp; param=my_param,kwargs...)
+    my_param = R2ParameterSet{R}(atol, rtol, η1, η2, γ1, γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    return SolverCore.solve!(solver, nlp; param = my_param, kwargs...)
 end
 
 function SolverCore.reset!(solver::SR2Solver{T}) where {T}
@@ -121,7 +121,7 @@ SolverCore.reset!(solver::SR2Solver, ::AbstractNLPModel) = reset!(solver)
 function SolverCore.solve!(
     solver::SR2Solver{T,V},
     nlp::AbstractNLPModel{T,V},
-    stats::GenericExecutionStats{T,V};    ;
+    stats::GenericExecutionStats{T,V};
     x::V = nlp.meta.x0,
     param::AbstractParameterSet,#TODO either defult constructor if empty or move it up 
     max_time::Float64 = 30.0,
@@ -174,7 +174,7 @@ function SolverCore.solve!(
         ),
     )
 
-    callback(nlp, solver, stats)
+    callback(nlp, solver, stats, my_param)
 
     done = stats.status != :unknown
     while !done
@@ -242,7 +242,7 @@ function SolverCore.solve!(
             ),
         )
 
-        callback(nlp, solver, stats)
+        callback(nlp, solver, stats, my_param)
         ###TODO  not sure about this but  , move to cb and add more info
         set_objective!(stats, obj(nlp, x))
         grad!(nlp, x, solver.gx)

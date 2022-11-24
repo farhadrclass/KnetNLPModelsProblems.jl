@@ -8,7 +8,7 @@ using SolverCore
 using Plots
 using Knet, Images, MLDatasets
 using StochasticRounding
-using Statistics 
+using Statistics
 using KnetNLPModels
 using Knet:
     Knet,
@@ -40,13 +40,13 @@ Input:
 nlp:: KnetNLPModel 
 i:: current location in the iterator #TODO maybe do it in the knetnlpmodels as a current location
 """
-function minibatch_next_train!(nlp::AbstractKnetNLPModel,i)
-    i+= nlp.size_minibatch # update the i by mini_batch size
-        if ( i>= nlp.training_minibatch_iterator.imax)
+function minibatch_next_train!(nlp::AbstractKnetNLPModel, i)
+    i += nlp.size_minibatch # update the i by mini_batch size
+    if (i >= nlp.training_minibatch_iterator.imax)
         # reset to the begining and return xero 
         nlp.current_training_minibatch = first(nlp.training_minibatch_iterator) # reset to the first one
         return 0
-   else
+    else
         next = iterate(nlp.training_minibatch_iterator, i)
         nlp.current_training_minibatch = next[1]
         return i
@@ -106,7 +106,7 @@ function plotSamples(myModel, xtrn, ytrn, data_set; samples = 5)
         i = i + 1
     end
     display(p)
-    s= "..//results//samples_" * Strings(samples) #TODO change to dynamic name wrtie to file
+    s = "..//results//samples_" * Strings(samples) #TODO change to dynamic name wrtie to file
     png(s)
 end
 
@@ -125,7 +125,7 @@ function build_inner_product(x, y)
     return x'y
 end
 
-function  mat_zero_mean(M,N)
+function mat_zero_mean(M, N)
     # M = copy(V)
     # N = copy(U)
     # if (M isa AbstractVecOrMat)
@@ -135,67 +135,67 @@ function  mat_zero_mean(M,N)
     # end
     # if (N isa AbstractVecOrMat)
     #     B = N;
-        
+
     # else
     #     B = N.value;
     # end
 
     A = mat(M)
-    B=  mat(N)
+    B = mat(N)
     if A isa AbstractVecOrMat
         T = eltype(A)
-        if  size(A)[2] == size(B)[1]
-            C = Array{T}(undef, size(A)[1],size(B)[2])
-            i=0
+        if size(A)[2] == size(B)[1]
+            C = Array{T}(undef, size(A)[1], size(B)[2])
+            i = 0
             for row in eachrow(A)
-                i+=1
-                j =0
+                i += 1
+                j = 0
                 for col in eachcol(B)
-                    j+=1
-                    C[i,j]=zero_mean_inner(row,col)
+                    j += 1
+                    C[i, j] = zero_mean_inner(row, col)
                 end
             end
             return C
-        else 
+        else
             error("Size mismatched, cannot multiply A and B.")
             return -1
         end
     else
-        C = M*N
+        C = M * N
     end
     return C
 
 end
 
 
-function  mat_mult(V,U)
+function mat_mult(V, U)
     M = copy(V)
     N = copy(U)
     if (M isa AbstractVecOrMat)
-        A = M;
+        A = M
     else
-        A = M.value;
+        A = M.value
     end
     if (N isa AbstractVecOrMat)
-        B = N;
+        B = N
     else
-        B = N.value;
+        B = N.value
     end
 
     T = eltype(A)
-    if  size(A)[2] == size(B)[1]
-        C = Array{T}(undef, size(A)[1],size(B)[2])
+    if size(A)[2] == size(B)[1]
+        C = Array{T}(undef, size(A)[1], size(B)[2])
         i = 0
         for row in eachrow(A)
             i += 1
             j = 0
             for col in eachcol(B)
                 j += 1
-                C[i,j] = build_inner_product(row,col)
+                C[i, j] = build_inner_product(row, col)
             end
         end
         return C
-    else 
+    else
         error("Size mismatched, cannot multiply A and B.")
         return -1
     end

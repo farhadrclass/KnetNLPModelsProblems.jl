@@ -1,2 +1,1 @@
-module KnetNLPModelsProblems
-end
+module KnetNLPModelsProblems end

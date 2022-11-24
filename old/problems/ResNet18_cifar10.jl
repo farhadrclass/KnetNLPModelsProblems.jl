@@ -24,7 +24,8 @@ struct Chain
 end
 (c::Chain)(x) = (for l in c.layers
     x = l(x)
-end; x)
+end;
+x)
 (c::Chain)(x, y) = nll(c(x), y)
 
 # Load MNIST data:

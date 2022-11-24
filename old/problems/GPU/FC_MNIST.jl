@@ -3,30 +3,32 @@ include("../../src/R2.jl")
 include("../../src/FC_mnist.jl")
 include("../../src/small_FC_mnist.jl")
 
-function train_fc_small(;T = Float32,
-    minibatch_size = 100, 
-    max_epochs = 5, 
+function train_fc_small(;
+    T = Float32,
+    minibatch_size = 100,
+    max_epochs = 5,
     max_iter = -1,
-    solver = R2, 
-    all_data_arg = false, 
-    verbose_arg = true, 
+    solver = R2,
+    all_data_arg = false,
+    verbose_arg = true,
     epoch_verbose_arg = true,
-    gamma = 0.9
-    )
+    gamma = 0.9,
+)
 
-    if CUDA.functional() 
+    if CUDA.functional()
         Knet.array_type[] = CUDA.CuArray{T}
-    else 
+    else
         Knet.array_type[] = Array{T}
     end
-    
+
     if epoch_verbose_arg
         @info("The type is ", T)
     end
-    
+
     (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
-    knetModel, myModel = FC_small_mnist(xtrn, ytrn, xtst, ytst; minibatchSize = minibatch_size)
-    
+    knetModel, myModel =
+        FC_small_mnist(xtrn, ytrn, xtst, ytst; minibatchSize = minibatch_size)
+
 
     trained_model = train_knetNLPmodel!(
         myModel,
@@ -40,8 +42,8 @@ function train_fc_small(;T = Float32,
         verbose = verbose_arg,
         max_iter = max_iter,
         epoch_verbose = epoch_verbose_arg,
-        gamma = gamma
-        )
+        gamma = gamma,
+    )
     res = trained_model[2]
     epochs, acc, train_acc = res[:, 1], res[:, 2], res[:, 3]
     return epochs, acc, train_acc

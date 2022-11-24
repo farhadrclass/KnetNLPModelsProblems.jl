@@ -54,6 +54,6 @@ function plotSamples(myModel, xtrn, ytrn, data_set; samples = 5)
         i = i + 1
     end
     display(p)
-    s= "..//results//samples_" * Strings(samples) #TODO change to dynamic name wrtie to file
+    s = "..//results//samples_" * Strings(samples) #TODO change to dynamic name wrtie to file
     png(s)
 end

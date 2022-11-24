@@ -13,5 +13,15 @@ m = 100
 
 knetModel, myModel = nn_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 
-trained_model = train_knetNLPmodel!(myModel, R2, xtrn, ytrn; mbatch = m, mepoch = 1, maxTime = 100, all_data = false, verbose = false)
+trained_model = train_knetNLPmodel!(
+    myModel,
+    R2,
+    xtrn,
+    ytrn;
+    mbatch = m,
+    mepoch = 1,
+    maxTime = 100,
+    all_data = false,
+    verbose = false,
+)
 
