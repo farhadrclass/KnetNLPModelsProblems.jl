@@ -135,15 +135,17 @@ function SolverCore.solve!(
     start_time = time()
     set_time!(stats, 0.0)
 
-    x = solver.x .= x
+    #TODO change all of these to solver.
+    # x = solver.x .= x
+    solver.x .= x
     #   ∇fk = solver.gx
-    ck = solver.cx
-    d = solver.d
+    # ck = solver.cx
+    # d = solver.d
 
     set_iter!(stats, 0)
-    set_objective!(stats, obj(nlp, x))
+    set_objective!(stats, obj(nlp,solver.x ))
 
-    grad!(nlp, x, solver.gx)
+    grad!(nlp,solver.x, solver.gx)
     norm_∇fk = norm(solver.gx)
     set_dual_residual!(stats, norm_∇fk)
 
@@ -159,9 +161,9 @@ function SolverCore.solve!(
     end
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
-        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s  %7s  %7s" "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" "η1" "η2"
+        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s " "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" 
         infoline =
-            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk 0.0 0.0 param.η1.value param.η2.value
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk 0.0 0.0 
     end
 
     set_status!(
@@ -179,24 +181,41 @@ function SolverCore.solve!(
 
     done = stats.status != :unknown
     while !done
+        
+        #added by Farhad for Deep learning
+        # since we are not updating the solver.x, then grad should say the same but we might have noise 
+
+
+        #TODO objective re-calculate since we need same x, with new minibatch
+
+        set_objective!(stats, obj(nlp,solver.x ))
+
+        grad!(nlp,solver.x, solver.gx)
+        norm_∇fk = norm(solver.gx)
+        set_dual_residual!(stats, norm_∇fk)
+
+        # σk = 2^round(log2(norm_∇fk + 1))
+
+
         if param.β.value == 0
-            ck .= x .- (solver.gx ./ σk)
+            solver.cx .=solver.x .- (solver.gx ./ σk)
         else
-            d .= solver.gx .* (T(1) - param.β.value) .+ d .* param.β.value
-            ck .= x .- (d ./ σk)
+            solver.d .= solver.gx .* (T(1) - param.β.value) .+  solver.d .* param.β.value
+            solver.cx .=solver.x .- (d ./ σk)
         end
 
 
         ΔTk = norm_∇fk^2 / σk
-
-        fck = obj(nlp, ck)
-
-
-        # ΔTk = fck - (\phi _x )
+        fck = obj(nlp, solver.cx)
         if fck == -Inf
             set_status!(stats, :unbounded)
             break
         end
+
+        #TODO objective re-calculate since we need same x, with new minibatch
+        # set_objective!(stats, obj(nlp,solver.x))
+
+
 
         ρk = (stats.objective - fck) / ΔTk
 
@@ -209,22 +228,25 @@ function SolverCore.solve!(
 
         # Acceptance of the new candidate
         if ρk >= param.η1.value
-            x .= ck
+           solver.x .= solver.cx
             set_objective!(stats, fck)
-            grad!(nlp, x, solver.gx)
+            grad!(nlp,solver.x, solver.gx)
             norm_∇fk = norm(solver.gx)
         end
 
         set_iter!(stats, stats.iter + 1)
         set_time!(stats, time() - start_time)
         set_dual_residual!(stats, norm_∇fk)
+        
+        
+        #TODO for now
         # optimal = norm_∇fk ≤ ϵ
-        optimal = false #TODO for now
+        optimal = false 
 
         if verbose > 0 && mod(stats.iter, verbose) == 0
             @info infoline
             infoline =
-                @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk ρk ΔTk param.η1.value param.η2.value
+                @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk ρk ΔTk
             # infoline =
             # @sprintf "%5d  %9.2e  %7.1e  %7.1e" stats.iter stats.objective norm_∇fk σk
         end
@@ -241,20 +263,13 @@ function SolverCore.solve!(
         )
 
         callback(nlp, solver, stats, param)
-        ###TODO  not sure about this but  , move to cb and add more info
-        set_objective!(stats, obj(nlp, x))
-        grad!(nlp, x, solver.gx)
-        norm_∇fk = norm(solver.gx)
-        set_dual_residual!(stats, norm_∇fk)
 
-        σk = 2^round(log2(norm_∇fk + 1)) # let's not change
-
-        #####
-        # I am forcing it not to stop
+        # #####
+        # # I am forcing it not to stop
         done = stats.status != :unknown
     end
 
-    set_solution!(stats, x)
+    set_solution!(stats,solver.x)
     if verbose > 0 
         @info @sprintf "%s: %s" "stats.status" stats.status
     end

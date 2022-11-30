@@ -4,8 +4,8 @@ Knet.atype() = Array{T}
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
-m = 1000
-max_epochs = 10
+m = 125
+max_epochs = 5
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 println("Training SR2 with KNET")
@@ -20,6 +20,7 @@ trained_model = train_knetNLPmodel!(
     # β = T(0.3),
     # atol = T(0.05),
     # rtol = T(0.05),
+    # η1 = eps(T)
 )
 
 
