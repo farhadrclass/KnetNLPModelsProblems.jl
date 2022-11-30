@@ -1,11 +1,18 @@
 
 T = Float32
-Knet.atype() = Array{T}
+# Knet.atype() = Array{T}
+if CUDA.functional() 
+    Knet.array_type[] = CUDA.CuArray{T}
+else 
+    Knet.array_type[] = Array{T}
+end
+
+
 (xtrn, ytrn), (xtst, ytst) = loaddata(1, T)
 
 # size of minibatch 
 m = 125
-max_epochs = 5
+max_epochs = 50
 
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 println("Training SR2 with KNET")
@@ -29,16 +36,6 @@ epochs = res.epoch_arr
 acc = res.acc_arr
 train_acc = res.train_acc_arr
 
-fig = plot(
-    epochs,
-    # title = " test accuracy vs Epoch",
-    markershape = :star4,
-    acc,
-    label = "test accuracy R2",
-    legend = :bottomright,
-    xlabel = "epoch",
-    ylabel = "accuracy",
-)
 
 println("Training SGD with KNET")
 # Train Knet
@@ -113,3 +110,5 @@ plot!(
     label = "train accuracy SGD",
     linestyle = :dot,
 )
+
+savefig("run_1.png")
