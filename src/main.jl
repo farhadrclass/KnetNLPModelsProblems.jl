@@ -51,4 +51,6 @@ include("models/lenet_mnist.jl")
 
 # For now I will add the problems here but later I move them to their own folder 
 
-include("problems/CPU/LeNet_MNIST.jl")
+# include("problems/CPU/LeNet_MNIST.jl")
+# include("problems/GPU/LeNet_MNIST.jl")
+include("problems/GPU/LeNet_CIFAR10.jl")
