@@ -10,9 +10,9 @@ max_epochs = 5
 knetModel, myModel = lenet_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 println("Training SR2 with KNET")
 
-# random init the w 
-w = rand(eltype(myModel.meta.x0), size(myModel.meta.x0)[1])
-set_vars!(myModel, w)
+# # random init the w 
+# w = rand(eltype(myModel.meta.x0), size(myModel.meta.x0)[1])
+# set_vars!(myModel, w)
 
 trained_model = train_knetNLPmodel!(
     myModel,

@@ -16,8 +16,8 @@ max_epochs = 50
 
 knetModel, myModel = cifar10_prob(xtrn, ytrn, xtst, ytst, minibatchSize = m)
 # random init the w 
-w = rand(eltype(myModel.meta.x0), size(myModel.meta.x0)[1])
-set_vars!(myModel, w)
+# w = rand(eltype(myModel.meta.x0), size(myModel.meta.x0)[1])
+# set_vars!(myModel, w)
 
 println("Training SR2 with KNET")
 trained_model = train_knetNLPmodel!(
