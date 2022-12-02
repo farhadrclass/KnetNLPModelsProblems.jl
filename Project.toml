@@ -25,6 +25,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StochasticRounding = "3843c9a1-1f18-49ff-9d99-1b4c8a8e97ed"
 
 [compat]
+Images = "0.25"
 julia = "1.6"
 
 [extras]
