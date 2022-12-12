@@ -108,18 +108,20 @@ SolverCore.reset!(solver::SR2Solver, ::AbstractNLPModel) = reset!(solver)
 
 #TODO rtol, Rtol  are out ,?
 
-# param.atol.value::T = √eps(T),
-# param.rtol.value::T = √eps(T),
+#TODO use as dummy for now 
 
-# param.η1.value = eps(T)^(1 / 4),
-# param.η2.value = T(0.95),
-# param.γ1.value = T(1 / 2),
-# param.γ2.value = 1 / param.γ1.value,
-# param.σmin.value = zero(T),
-# param.β.value::T = T(0),
+# function SolverCore.solve!(solver::AbstractOptimizationSolver, param::AbstractParameterSet, model::AbstractNLPModel; kwargs...)
+#     stats = GenericExecutionStats(model)
+#     solve!(solver, param, model, stats; kwargs...)
+#   end
+
+
+
+#TODO make param poistional requirment 
 
 function SolverCore.solve!(
     solver::SR2Solver{T,V},
+    #param
     nlp::AbstractNLPModel{T,V},
     stats::GenericExecutionStats{T,V};
     x::V = nlp.meta.x0,
@@ -138,7 +140,7 @@ function SolverCore.solve!(
     #TODO change all of these to solver.
     # x = solver.x .= x
     solver.x .= x
-    #   ∇fk = solver.gx
+    #   ∇fk = solver.gx # todo pointer !!
     # ck = solver.cx
     # d = solver.d
 
