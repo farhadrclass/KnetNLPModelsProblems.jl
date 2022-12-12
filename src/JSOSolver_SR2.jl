@@ -22,42 +22,36 @@ struct R2ParameterSet{T<:AbstractFloat} <: AbstractParameterSet  #TODO change it
     γ2::Parameter{T,RealInterval{T}}
     σmin::Parameter{T,RealInterval{T}}
     β::Parameter{T,RealInterval{T}}
-    # monotone::Parameter{Int, IntegerRange{Int}}
     # β::Parameter{Float64, RealInterval{Float64}}
 
-    # empty constructor 
 
-    #TODO --kwargs...
-    R2ParameterSet{T}() where {T<:AbstractFloat} = new(
-        Parameter(√eps(T), RealInterval(T(0), T(1)), "atol"),
-        Parameter(√eps(T), RealInterval(T(0), T(1)), "rtol"),
-        Parameter(T(eps(T)^(1 / 4)), RealInterval(T(0), T(1)), "η1"),
-        Parameter(T(0.95), RealInterval(T(0), T(10)), "η2"),
-        Parameter(T(1 / 2), RealInterval(T(0), T(1)), "γ1"),
-        Parameter(T(2), RealInterval(T(0), T(10)), "γ2"),
-        Parameter(zero(T), RealInterval(T(0), T(1000)), "σmin"),
-        Parameter(T(0), RealInterval(T(0), T(1000)), "β"),
-    )
+    function R2ParameterSet{T}(;
+        atol::T = √eps(T),
+        rtol::T = √eps(T),
+        η1 = eps(T)^(1 / 4),#TODO check if this is too big
+        η2 = T(0.95),
+        γ1 = T(1 / 2),
+        γ2 = 1 / γ1,
+        σmin = zero(T),# change this
+        β::T = T(0),
+    ) where {T<:AbstractFloat} # empthy constructor  
 
-
-    function R2ParameterSet{T}(atol, rtol, η1, η2, γ1, γ2, σmin, β) where {T<:AbstractFloat} # empthy constructor 
-        #TODO 
         atol >= 0 || throw(DomainError("invalid atol, atol>=0"))
         rtol >= 0 || throw(DomainError("invalid rtol, rtol >=0"))
         0 < η1 <= η2 <= 1 || throw(DomainError("invalid: 0 < η1 <= η2 <= 1"))
-        0 <= β < 1 ||  throw(DomainError("invalid: β needs to be between [0,1)"))
-        0 < γ1 < 1 <= γ2 ||      throw(DomainError("invalid 0 < γ1 < 1 <= γ2 "))
-            new(
-                Parameter(T(atol), RealInterval(T(-1000), T(1000)), "atol"), #TODO actual name 
-                Parameter(T(rtol), RealInterval(T(-1000), T(1000)), "rtol"),
-                Parameter(T(η1), RealInterval(T(-1000), T(1000)), "η1"),
-                Parameter(T(η2), RealInterval(T(-10000), T(10000)), "η2"),
-                Parameter(T(γ1), RealInterval(T(-10000), T(1000)), "γ1"),
-                Parameter(T(γ2), RealInterval(T(-10000), T(1000)), "γ2"),
-                Parameter(σmin, RealInterval(T(-10000), T(1000)), "σmin"),
-                Parameter(T(β), RealInterval(T(-10000), T(1000)), "β"),
-            )
-        
+        0 <= β < 1 || throw(DomainError("invalid: β needs to be between [0,1)"))
+        0 < γ1 < 1 <= γ2 || throw(DomainError("invalid 0 < γ1 < 1 <= γ2 "))
+        new(
+            Parameter(T(atol), RealInterval(T(-1000), T(1000)), "atol"), #TODO actual name 
+            Parameter(T(rtol), RealInterval(T(-1000), T(1000)), "rtol"),
+            Parameter(T(η1), RealInterval(T(-1000), T(1000)), "η1"),
+            Parameter(T(η2), RealInterval(T(-10000), T(10000)), "η2"),
+            Parameter(T(γ1), RealInterval(T(-10000), T(1000)), "γ1"),
+            Parameter(T(γ2), RealInterval(T(-10000), T(1000)), "γ2"),
+            Parameter(σmin, RealInterval(T(-10000), T(1000)), "σmin"),
+            Parameter(T(β), RealInterval(T(-10000), T(1000)), "β"),
+        )
+
     end
 
 end
