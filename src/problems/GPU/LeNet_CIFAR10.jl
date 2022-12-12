@@ -1,9 +1,9 @@
 
 T = Float32
 # Knet.atype() = Array{T}
-if CUDA.functional() 
+if CUDA.functional()
     Knet.array_type[] = CUDA.CuArray{T}
-else 
+else
     Knet.array_type[] = Array{T}
 end
 

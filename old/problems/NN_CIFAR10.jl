@@ -24,4 +24,3 @@ trained_model = train_knetNLPmodel!(
     all_data = false,
     verbose = false,
 )
-
