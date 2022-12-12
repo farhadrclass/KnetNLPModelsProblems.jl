@@ -45,12 +45,17 @@ include("models/lenet_cifar10.jl")
 include("models/lenet_mnist.jl")
 
 
-
+# using Pkg
+# Pkg.instantiate()
 # end
 
 
 # For now I will add the problems here but later I move them to their own folder 
-
+#TODO use condition on which one to run
 # include("problems/CPU/LeNet_MNIST.jl")
 # include("problems/GPU/LeNet_MNIST.jl")
-include("problems/GPU/LeNet_CIFAR10.jl")
+# include("problems/GPU/LeNet_CIFAR10.jl")
+
+
+#TODO 
+# RENSET

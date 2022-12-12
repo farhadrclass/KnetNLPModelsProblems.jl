@@ -28,7 +28,7 @@ struct R2ParameterSet{T<:AbstractFloat} <: AbstractParameterSet  #TODO change it
     function R2ParameterSet{T}(;
         atol::T = √eps(T),
         rtol::T = √eps(T),
-        η1 = eps(T)^(1 / 4),#TODO check if this is too big
+        η1 = T(eps(T)^(1 / 4)),#TODO check if this is too big
         η2 = T(0.95),
         γ1 = T(1 / 2),
         γ2 = 1 / γ1,

@@ -66,12 +66,17 @@ stats = solve!(solver, nlp)
 "Execution stats: first-order stationary"
 ```
 """
+
+
+import SolverCore.solve!
+import Krylov.solve!
+export solve!
+
 mutable struct SR2Solver{T,V} <: AbstractOptimizationSolver
     x::V
     gx::V
     cx::V
     d::V   # used for momentum term
-    # param::AbstractParameterSet{T} #TODO should I add it here?
 end
 
 function SR2Solver(nlp::AbstractNLPModel{T,V}) where {T,V}
@@ -82,11 +87,12 @@ function SR2Solver(nlp::AbstractNLPModel{T,V}) where {T,V}
     return SR2Solver{T,V}(x, gx, cx, d)
 end
 
+
 @doc (@doc SR2Solver) function SR2(
     nlp::AbstractNLPModel{T,V};
     atol::T = √eps(T),
     rtol::T = √eps(T),
-    η1 = eps(T)^(1 / 4),#TODO check if this is too big
+    η1 = T(eps(T)^(1 / 4)),#TODO check if this is too big
     η2 = T(0.95),
     γ1 = T(1 / 2),
     γ2 = 1 / γ1,
@@ -95,8 +101,8 @@ end
     kwargs...,
 ) where {T,V}
     solver = SR2Solver(nlp)
-    nlp_param = R2ParameterSet{T}(atol, rtol, η1, η2, γ1, γ2, σmin, β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
-    return SolverCore.solve!(solver, nlp; param = nlp_param, kwargs...)
+    nlp_param = R2ParameterSet{T}(atol=atol, rtol=rtol, η1=η1, η2=η2, γ1=γ1, γ2=γ2, σmin=σmin, β = β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    return SolverCore.solve!(solver, nlp_param, nlp; kwargs...)
 end
 
 function SolverCore.reset!(solver::SR2Solver{T}) where {T}
@@ -106,14 +112,25 @@ end
 SolverCore.reset!(solver::SR2Solver, ::AbstractNLPModel) = reset!(solver)
 
 
+
+
 #TODO rtol, Rtol  are out ,?
 
-#TODO use as dummy for now 
 
 # function SolverCore.solve!(solver::AbstractOptimizationSolver, param::AbstractParameterSet, model::AbstractNLPModel; kwargs...)
 #     stats = GenericExecutionStats(model)
 #     solve!(solver, param, model, stats; kwargs...)
 #   end
+
+function SolverCore.solve!(
+    solver::AbstractOptimizationSolver,
+    param::AbstractParameterSet,
+    model::AbstractNLPModel;
+    kwargs...,
+)
+    stats = GenericExecutionStats(model)
+    solve!(solver, param, model, stats; kwargs...)
+end
 
 
 
@@ -121,11 +138,10 @@ SolverCore.reset!(solver::SR2Solver, ::AbstractNLPModel) = reset!(solver)
 
 function SolverCore.solve!(
     solver::SR2Solver{T,V},
-    #param
+    param::AbstractParameterSet,
     nlp::AbstractNLPModel{T,V},
     stats::GenericExecutionStats{T,V};
     x::V = nlp.meta.x0,
-    param::AbstractParameterSet,#TODO either defult constructor if empty or move it up 
     max_time::Float64 = 30.0,
     max_eval::Int = -1,
     callback = (args...) -> nothing,
@@ -145,9 +161,9 @@ function SolverCore.solve!(
     # d = solver.d
 
     set_iter!(stats, 0)
-    set_objective!(stats, obj(nlp,solver.x ))
+    set_objective!(stats, obj(nlp, solver.x))
 
-    grad!(nlp,solver.x, solver.gx)
+    grad!(nlp, solver.x, solver.gx)
     norm_∇fk = norm(solver.gx)
     set_dual_residual!(stats, norm_∇fk)
 
@@ -163,9 +179,9 @@ function SolverCore.solve!(
     end
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
-        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s " "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" 
+        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s " "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk"
         infoline =
-            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk 0.0 0.0 
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk 0.0 0.0
     end
 
     set_status!(
@@ -183,16 +199,16 @@ function SolverCore.solve!(
 
     done = stats.status != :unknown
     while !done
-        
+
         #added by Farhad for Deep learning
         # since we are not updating the solver.x, then grad should say the same but we might have noise 
 
 
         #TODO objective re-calculate since we need same x, with new minibatch
 
-        set_objective!(stats, obj(nlp,solver.x ))
+        set_objective!(stats, obj(nlp, solver.x))
 
-        grad!(nlp,solver.x, solver.gx)
+        grad!(nlp, solver.x, solver.gx)
         norm_∇fk = norm(solver.gx)
         set_dual_residual!(stats, norm_∇fk)
 
@@ -200,10 +216,10 @@ function SolverCore.solve!(
 
 
         if param.β.value == 0
-            solver.cx .=solver.x .- (solver.gx ./ σk)
+            solver.cx .= solver.x .- (solver.gx ./ σk)
         else
-            solver.d .= solver.gx .* (T(1) - param.β.value) .+  solver.d .* param.β.value
-            solver.cx .=solver.x .- (d ./ σk)
+            solver.d .= solver.gx .* (T(1) - param.β.value) .+ solver.d .* param.β.value
+            solver.cx .= solver.x .- (d ./ σk)
         end
 
 
@@ -230,20 +246,20 @@ function SolverCore.solve!(
 
         # Acceptance of the new candidate
         if ρk >= param.η1.value
-           solver.x .= solver.cx
+            solver.x .= solver.cx
             set_objective!(stats, fck)
-            grad!(nlp,solver.x, solver.gx)
+            grad!(nlp, solver.x, solver.gx)
             norm_∇fk = norm(solver.gx)
         end
 
         set_iter!(stats, stats.iter + 1)
         set_time!(stats, time() - start_time)
         set_dual_residual!(stats, norm_∇fk)
-        
-        
+
+
         #TODO for now
         # optimal = norm_∇fk ≤ ϵ
-        optimal = false 
+        optimal = false
 
         if verbose > 0 && mod(stats.iter, verbose) == 0
             @info infoline
@@ -271,8 +287,8 @@ function SolverCore.solve!(
         done = stats.status != :unknown
     end
 
-    set_solution!(stats,solver.x)
-    if verbose > 0 
+    set_solution!(stats, solver.x)
+    if verbose > 0
         @info @sprintf "%s: %s" "stats.status" stats.status
     end
     return stats
