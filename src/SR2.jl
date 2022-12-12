@@ -101,7 +101,16 @@ end
     kwargs...,
 ) where {T,V}
     solver = SR2Solver(nlp)
-    nlp_param = R2ParameterSet{T}(atol=atol, rtol=rtol, η1=η1, η2=η2, γ1=γ1, γ2=γ2, σmin=σmin, β = β) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
+    nlp_param = R2ParameterSet{T}(
+        atol = atol,
+        rtol = rtol,
+        η1 = η1,
+        η2 = η2,
+        γ1 = γ1,
+        γ2 = γ2,
+        σmin = σmin,
+        β = β,
+    ) #(√eps(R), √eps(R), 0.1, 0.3, 1.1, 1.9, zero(R), 0.9) # TODO add the param here
     return SolverCore.solve!(solver, nlp_param, nlp; kwargs...)
 end
 
