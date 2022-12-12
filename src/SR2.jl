@@ -145,9 +145,9 @@ function SolverCore.solve!(
     # d = solver.d
 
     set_iter!(stats, 0)
-    set_objective!(stats, obj(nlp,solver.x ))
+    set_objective!(stats, obj(nlp, solver.x))
 
-    grad!(nlp,solver.x, solver.gx)
+    grad!(nlp, solver.x, solver.gx)
     norm_∇fk = norm(solver.gx)
     set_dual_residual!(stats, norm_∇fk)
 
@@ -163,9 +163,9 @@ function SolverCore.solve!(
     end
 
     if verbose > 0 && mod(stats.iter, verbose) == 0
-        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s " "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk" 
+        @info @sprintf "%5s  %9s  %7s  %7s  %7s  %7s " "iter" "f" "‖∇f‖" "σ" "ρk" "ΔTk"
         infoline =
-            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk 0.0 0.0 
+            @sprintf "%5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e " stats.iter stats.objective norm_∇fk σk 0.0 0.0
     end
 
     set_status!(
@@ -183,16 +183,16 @@ function SolverCore.solve!(
 
     done = stats.status != :unknown
     while !done
-        
+
         #added by Farhad for Deep learning
         # since we are not updating the solver.x, then grad should say the same but we might have noise 
 
 
         #TODO objective re-calculate since we need same x, with new minibatch
 
-        set_objective!(stats, obj(nlp,solver.x ))
+        set_objective!(stats, obj(nlp, solver.x))
 
-        grad!(nlp,solver.x, solver.gx)
+        grad!(nlp, solver.x, solver.gx)
         norm_∇fk = norm(solver.gx)
         set_dual_residual!(stats, norm_∇fk)
 
@@ -200,10 +200,10 @@ function SolverCore.solve!(
 
 
         if param.β.value == 0
-            solver.cx .=solver.x .- (solver.gx ./ σk)
+            solver.cx .= solver.x .- (solver.gx ./ σk)
         else
-            solver.d .= solver.gx .* (T(1) - param.β.value) .+  solver.d .* param.β.value
-            solver.cx .=solver.x .- (d ./ σk)
+            solver.d .= solver.gx .* (T(1) - param.β.value) .+ solver.d .* param.β.value
+            solver.cx .= solver.x .- (d ./ σk)
         end
 
 
@@ -230,20 +230,20 @@ function SolverCore.solve!(
 
         # Acceptance of the new candidate
         if ρk >= param.η1.value
-           solver.x .= solver.cx
+            solver.x .= solver.cx
             set_objective!(stats, fck)
-            grad!(nlp,solver.x, solver.gx)
+            grad!(nlp, solver.x, solver.gx)
             norm_∇fk = norm(solver.gx)
         end
 
         set_iter!(stats, stats.iter + 1)
         set_time!(stats, time() - start_time)
         set_dual_residual!(stats, norm_∇fk)
-        
-        
+
+
         #TODO for now
         # optimal = norm_∇fk ≤ ϵ
-        optimal = false 
+        optimal = false
 
         if verbose > 0 && mod(stats.iter, verbose) == 0
             @info infoline
@@ -271,8 +271,8 @@ function SolverCore.solve!(
         done = stats.status != :unknown
     end
 
-    set_solution!(stats,solver.x)
-    if verbose > 0 
+    set_solution!(stats, solver.x)
+    if verbose > 0
         @info @sprintf "%s: %s" "stats.status" stats.status
     end
     return stats

@@ -47,7 +47,8 @@ fig = plot(
 
 println("Training SGD with KNET")
 # Train Knet
-trained_model_knet = train_knet(knetModel, xtrn, ytrn, xtst, ytst;mbatch=m, mepoch = max_epochs) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
+trained_model_knet =
+    train_knet(knetModel, xtrn, ytrn, xtst, ytst; mbatch = m, mepoch = max_epochs) #TODO some reason when mepoch=max_epochs, will give error , maybe Int(max_epochs)
 res_knet = trained_model_knet[2]
 epochs_knet = res_knet[:, 1]
 acc_knet = res_knet[:, 2]

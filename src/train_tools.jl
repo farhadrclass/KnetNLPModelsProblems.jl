@@ -99,7 +99,7 @@ function train_knetNLPmodel!(
     γ2 = 1 / γ1,
     σmin = zero(T),# change this
     β::T = T(0),
-    max_time = Inf
+    max_time = Inf,
     # max_iter = 1000, # we can play with this and see what happens in R2, 1 means one itration but the relation is not 1-to-1, 
     #TODO  add max itration 
 ) where {T}
@@ -121,7 +121,7 @@ function train_knetNLPmodel!(
         γ2 = γ2,
         σmin = σmin,
         β = β,
-        max_time=max_time,
+        max_time = max_time,
         verbose = verbose,
         callback = (nlp, solver, stats, nlp_param) ->
             cb(nlp, solver, stats, nlp_param, stochastic_data),

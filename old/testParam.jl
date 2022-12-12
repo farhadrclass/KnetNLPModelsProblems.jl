@@ -64,4 +64,3 @@ println(B.γ1.value)
 
 
 C = R2ParameterSet{R}(√eps(R), √eps(R), 0.1, 0.01, 0.1, 1.9, zero(R), 0.9) # with issues
-
